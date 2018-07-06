@@ -1,0 +1,361 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3C05FA8D1342AC9A00FFE250 /* libbassmidi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */; };
+		3C05FA8E1342AC9A00FFE250 /* libbassmidi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */; };
+		3C05FA8F1342AC9A00FFE250 /* libbassmidi.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */; };
+		3C05FA921342ACD900FFE250 /* miditest.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C05FA901342ACD900FFE250 /* miditest.c */; };
+		3C05FA931342ACD900FFE250 /* miditest.nib in Resources */ = {isa = PBXBuildFile; fileRef = 3C05FA911342ACD900FFE250 /* miditest.nib */; };
+		3C05FA941342ACEA00FFE250 /* libbassmidi.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */; };
+		3C05FA961342ACF900FFE250 /* sf2pack.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C05FA951342ACF900FFE250 /* sf2pack.c */; };
+		3C05FA971342AD0500FFE250 /* libbassmidi.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */; };
+		3C05FA9A1342AD1400FFE250 /* synth.c in Sources */ = {isa = PBXBuildFile; fileRef = 3C05FA981342AD1400FFE250 /* synth.c */; };
+		3C05FA9B1342AD1400FFE250 /* synth.nib in Resources */ = {isa = PBXBuildFile; fileRef = 3C05FA991342AD1400FFE250 /* synth.nib */; };
+		3C05FA9C1342AD1C00FFE250 /* libbassmidi.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */; };
+		3C23D593128768E800154057 /* libbass.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C23D3FB12875F7100154057 /* libbass.dylib */; };
+		3C23D594128768E800154057 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C23D3FF12875FA800154057 /* Carbon.framework */; };
+		3C23D596128768E800154057 /* libbass.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3C23D3FB12875F7100154057 /* libbass.dylib */; };
+		3C23D60612876AEF00154057 /* libbass.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C23D3FB12875F7100154057 /* libbass.dylib */; };
+		3C23D60A12876B1A00154057 /* libbass.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3C23D3FB12875F7100154057 /* libbass.dylib */; };
+		3C9807BF132832E200BB0CEE /* libbass.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C23D3FB12875F7100154057 /* libbass.dylib */; };
+		3C9807C0132832E200BB0CEE /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C23D3FF12875FA800154057 /* Carbon.framework */; };
+		3C9807C3132832E200BB0CEE /* libbass.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 3C23D3FB12875F7100154057 /* libbass.dylib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3C23D595128768E800154057 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				3C23D596128768E800154057 /* libbass.dylib in CopyFiles */,
+				3C05FA9C1342AD1C00FFE250 /* libbassmidi.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C23D60D12876B2500154057 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				3C23D60A12876B1A00154057 /* libbass.dylib in CopyFiles */,
+				3C05FA971342AD0500FFE250 /* libbassmidi.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C9807C2132832E200BB0CEE /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				3C9807C3132832E200BB0CEE /* libbass.dylib in CopyFiles */,
+				3C05FA941342ACEA00FFE250 /* libbassmidi.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libbassmidi.dylib; sourceTree = "<group>"; };
+		3C05FA901342ACD900FFE250 /* miditest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = miditest.c; sourceTree = "<group>"; };
+		3C05FA911342ACD900FFE250 /* miditest.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = miditest.nib; sourceTree = "<group>"; };
+		3C05FA951342ACF900FFE250 /* sf2pack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sf2pack.c; sourceTree = "<group>"; };
+		3C05FA981342AD1400FFE250 /* synth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = synth.c; sourceTree = "<group>"; };
+		3C05FA991342AD1400FFE250 /* synth.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; path = synth.nib; sourceTree = "<group>"; };
+		3C23D3FB12875F7100154057 /* libbass.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libbass.dylib; sourceTree = SOURCE_ROOT; };
+		3C23D3FF12875FA800154057 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		3C23D599128768E800154057 /* synth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = synth.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C23D5FC12876A8B00154057 /* sf2pack */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sf2pack; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C9807C7132832E200BB0CEE /* miditest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = miditest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3C23D592128768E800154057 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C23D593128768E800154057 /* libbass.dylib in Frameworks */,
+				3C23D594128768E800154057 /* Carbon.framework in Frameworks */,
+				3C05FA8E1342AC9A00FFE250 /* libbassmidi.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C23D5FA12876A8B00154057 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C23D60612876AEF00154057 /* libbass.dylib in Frameworks */,
+				3C05FA8F1342AC9A00FFE250 /* libbassmidi.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C9807BE132832E200BB0CEE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C9807BF132832E200BB0CEE /* libbass.dylib in Frameworks */,
+				3C9807C0132832E200BB0CEE /* Carbon.framework in Frameworks */,
+				3C05FA8D1342AC9A00FFE250 /* libbassmidi.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		3C23D3B61287572E00154057 = {
+			isa = PBXGroup;
+			children = (
+				3C9807D91328330200BB0CEE /* miditest */,
+				3C23D460128763D000154057 /* sf2pack */,
+				3C23D4F91287655200154057 /* synth */,
+				3C23D3C71287577A00154057 /* Products */,
+				3C23D3FB12875F7100154057 /* libbass.dylib */,
+				3C05FA8C1342AC9A00FFE250 /* libbassmidi.dylib */,
+				3C23D3FF12875FA800154057 /* Carbon.framework */,
+			);
+			sourceTree = "<group>";
+		};
+		3C23D3C71287577A00154057 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3C23D599128768E800154057 /* synth.app */,
+				3C23D5FC12876A8B00154057 /* sf2pack */,
+				3C9807C7132832E200BB0CEE /* miditest.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3C23D460128763D000154057 /* sf2pack */ = {
+			isa = PBXGroup;
+			children = (
+				3C05FA951342ACF900FFE250 /* sf2pack.c */,
+			);
+			path = sf2pack;
+			sourceTree = "<group>";
+		};
+		3C23D4F91287655200154057 /* synth */ = {
+			isa = PBXGroup;
+			children = (
+				3C05FA981342AD1400FFE250 /* synth.c */,
+				3C05FA991342AD1400FFE250 /* synth.nib */,
+			);
+			path = synth;
+			sourceTree = "<group>";
+		};
+		3C9807D91328330200BB0CEE /* miditest */ = {
+			isa = PBXGroup;
+			children = (
+				3C05FA901342ACD900FFE250 /* miditest.c */,
+				3C05FA911342ACD900FFE250 /* miditest.nib */,
+			);
+			path = miditest;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3C23D58D128768E800154057 /* synth */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3C23D597128768E800154057 /* Build configuration list for PBXNativeTarget "synth" */;
+			buildPhases = (
+				3C23D58E128768E800154057 /* Resources */,
+				3C23D590128768E800154057 /* Sources */,
+				3C23D592128768E800154057 /* Frameworks */,
+				3C23D595128768E800154057 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = synth;
+			productName = synth;
+			productReference = 3C23D599128768E800154057 /* synth.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3C23D5FB12876A8B00154057 /* sf2pack */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3C23D5FF12876AAA00154057 /* Build configuration list for PBXNativeTarget "sf2pack" */;
+			buildPhases = (
+				3C23D5F912876A8B00154057 /* Sources */,
+				3C23D5FA12876A8B00154057 /* Frameworks */,
+				3C23D60D12876B2500154057 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = sf2pack;
+			productName = sf2pack;
+			productReference = 3C23D5FC12876A8B00154057 /* sf2pack */;
+			productType = "com.apple.product-type.tool";
+		};
+		3C9807B9132832E200BB0CEE /* miditest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3C9807C5132832E200BB0CEE /* Build configuration list for PBXNativeTarget "miditest" */;
+			buildPhases = (
+				3C9807BA132832E200BB0CEE /* Resources */,
+				3C9807BC132832E200BB0CEE /* Sources */,
+				3C9807BE132832E200BB0CEE /* Frameworks */,
+				3C9807C2132832E200BB0CEE /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = miditest;
+			productName = miditest;
+			productReference = 3C9807C7132832E200BB0CEE /* miditest.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3C23D3B81287572E00154057 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 3C23D3BB1287572E00154057 /* Build configuration list for PBXProject "bassmidi" */;
+			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 3C23D3B61287572E00154057;
+			productRefGroup = 3C23D3C71287577A00154057 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3C9807B9132832E200BB0CEE /* miditest */,
+				3C23D5FB12876A8B00154057 /* sf2pack */,
+				3C23D58D128768E800154057 /* synth */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3C23D58E128768E800154057 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C05FA9B1342AD1400FFE250 /* synth.nib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C9807BA132832E200BB0CEE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C05FA931342ACD900FFE250 /* miditest.nib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3C23D590128768E800154057 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C05FA9A1342AD1400FFE250 /* synth.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C23D5F912876A8B00154057 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C05FA961342ACF900FFE250 /* sf2pack.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C9807BC132832E200BB0CEE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C05FA921342ACD900FFE250 /* miditest.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3C23D3B91287572E00154057 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				HEADER_SEARCH_PATHS = "$(SRCROOT)";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		3C23D598128768E800154057 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		3C23D5FE12876A8C00154057 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		3C9807C6132832E200BB0CEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3C23D3BB1287572E00154057 /* Build configuration list for PBXProject "bassmidi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C23D3B91287572E00154057 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3C23D597128768E800154057 /* Build configuration list for PBXNativeTarget "synth" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C23D598128768E800154057 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3C23D5FF12876AAA00154057 /* Build configuration list for PBXNativeTarget "sf2pack" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C23D5FE12876A8C00154057 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3C9807C5132832E200BB0CEE /* Build configuration list for PBXNativeTarget "miditest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3C9807C6132832E200BB0CEE /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 3C23D3B81287572E00154057 /* Project object */;
+}

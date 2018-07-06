@@ -1,0 +1,137 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <object name="rootObject" class="NSCustomObject" id="1">
+  </object>
+  <array count="14" name="allObjects">
+    <object class="IBCarbonStaticText" id="5">
+      <int name="controlID">30</int>
+      <int name="controlSize">1</int>
+      <int name="justification">1</int>
+      <string name="bounds">110 20 155 380 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="167">
+      <array count="7" name="subviews">
+        <object class="IBCarbonButton" id="184">
+          <int name="controlID">10</int>
+          <string name="title">click here to open a file...</string>
+          <string name="bounds">10 10 30 460 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="227">
+          <int name="controlID">11</int>
+          <int name="controlSize">1</int>
+          <int name="justification">1</int>
+          <string name="bounds">35 10 51 460 </string>
+        </object>
+        <object class="IBCarbonSlider" id="228">
+          <int name="controlID">21</int>
+          <boolean name="isLive">TRUE</boolean>
+          <int name="orientation">2</int>
+          <int name="maximumValue">0</int>
+          <string name="bounds">61 10 77 240 </string>
+        </object>
+        <object class="IBCarbonCheckBox" id="229">
+          <int name="controlID">20</int>
+          <int name="initialState">1</int>
+          <string name="title">Reverb &amp; Chorus</string>
+          <string name="bounds">59 263 77 393 </string>
+        </object>
+        <object class="IBCarbonGroupBox" id="6">
+          <string name="title">Lyrics</string>
+          <array count="1" name="subviews">
+            <reference idRef="5"/>
+          </array>
+          <string name="bounds">85 10 165 390 </string>
+        </object>
+        <object class="IBCarbonGroupBox" id="2">
+          <string name="title">Soundfont</string>
+          <array count="2" name="subviews">
+            <object class="IBCarbonStaticText" id="3">
+              <int name="controlID">41</int>
+              <int name="controlSize">1</int>
+              <int name="justification">-2</int>
+              <string name="bounds">192 20 225 270 </string>
+            </object>
+            <object class="IBCarbonButton" id="4">
+              <int name="controlID">40</int>
+              <string name="title">Replace</string>
+              <string name="bounds">197 310 217 379 </string>
+            </object>
+          </array>
+          <string name="bounds">170 10 230 390 </string>
+        </object>
+        <object class="IBCarbonGroupBox" id="231">
+          <int name="fontStyle">0</int>
+          <string name="title">Tempo</string>
+          <boolean name="autoToggle">FALSE</boolean>
+          <boolean name="primary">FALSE</boolean>
+          <int name="selectedItem">0</int>
+          <array count="2" name="subviews">
+            <object class="IBCarbonSlider" id="232">
+              <int name="controlID">22</int>
+              <boolean name="isLive">TRUE</boolean>
+              <int name="numTickMarks">3</int>
+              <int name="minimumValue">-10</int>
+              <int name="maximumValue">10</int>
+              <string name="bounds">94 420 214 442 </string>
+            </object>
+            <object class="IBCarbonStaticText" id="233">
+              <int name="controlID">23</int>
+              <int name="fontStyle">-5</int>
+              <int name="justification">1</int>
+              <string name="bounds">70 405 86 455 </string>
+            </object>
+          </array>
+          <string name="bounds">50 400 230 460 </string>
+        </object>
+      </array>
+      <string name="bounds">0 0 240 470 </string>
+    </object>
+    <reference idRef="4"/>
+    <reference idRef="184"/>
+    <reference idRef="229"/>
+    <reference idRef="232"/>
+    <reference idRef="6"/>
+    <reference idRef="3"/>
+    <reference idRef="228"/>
+    <reference idRef="233"/>
+    <reference idRef="231"/>
+    <reference idRef="227"/>
+    <reference idRef="2"/>
+    <object class="IBCarbonWindow" id="166">
+      <boolean name="hasCloseBox">TRUE</boolean>
+      <boolean name="hasHorizontalZoom">TRUE</boolean>
+      <boolean name="hasVerticalZoom">TRUE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <int name="carbonWindowClass">4</int>
+      <int name="windowPosition">1</int>
+      <string name="title">BASSMIDI test</string>
+      <reference name="rootControl" idRef="167"/>
+      <string name="windowRect">295 235 535 705 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+  </array>
+  <array count="14" name="allParents">
+    <reference idRef="6"/>
+    <reference idRef="166"/>
+    <reference idRef="2"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="231"/>
+    <reference idRef="167"/>
+    <reference idRef="2"/>
+    <reference idRef="167"/>
+    <reference idRef="231"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="1"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>Window</string>
+    <reference idRef="166"/>
+  </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
+  <unsigned_int name="nextObjectID">234</unsigned_int>
+</object>

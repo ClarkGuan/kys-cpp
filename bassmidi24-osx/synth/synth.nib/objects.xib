@@ -1,0 +1,234 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <object name="rootObject" class="NSCustomObject" id="1">
+  </object>
+  <array count="25" name="allObjects">
+    <object class="IBCarbonGroupBox" id="231">
+      <int name="fontStyle">0</int>
+      <string name="title">Soundfont</string>
+      <boolean name="autoToggle">FALSE</boolean>
+      <boolean name="primary">FALSE</boolean>
+      <int name="selectedItem">0</int>
+      <array count="4" name="subviews">
+        <object class="IBCarbonButton" id="243">
+          <int name="controlID">40</int>
+          <int name="iconPosition">0</int>
+          <string name="title">no soundfont</string>
+          <string name="bounds">220 36 240 308 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="244">
+          <string name="title">Preset:</string>
+          <string name="bounds">252 36 268 86 </string>
+        </object>
+        <object class="IBCarbonCheckBox" id="247">
+          <int name="controlID">44</int>
+          <string name="title">Drums</string>
+          <string name="bounds">251 246 269 310 </string>
+        </object>
+        <object class="IBCarbonPopupButton" id="248">
+          <int name="controlID">42</int>
+          <int name="selectedItem">-2147483648</int>
+          <object name="menu" class="IBCarbonMenu" id="249">
+          </object>
+          <int name="titleJustification">0</int>
+          <string name="bounds">250 81 270 240 </string>
+        </object>
+      </array>
+      <string name="bounds">190 20 286 324 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="257">
+      <int name="controlID">11</int>
+      <int name="controlSize">1</int>
+      <string name="title">Activity</string>
+      <int name="justification">1</int>
+      <string name="bounds">38 258 53 308 </string>
+    </object>
+    <reference idRef="243"/>
+    <reference idRef="244"/>
+    <object class="IBCarbonPopupButton" id="253">
+      <int name="controlID">10</int>
+      <int name="selectedItem">-2147483648</int>
+      <object name="menu" class="IBCarbonMenu" id="254">
+      </object>
+      <int name="titleJustification">0</int>
+      <string name="bounds">35 34 55 250 </string>
+    </object>
+    <reference idRef="247"/>
+    <object class="IBCarbonCheckBox" id="222">
+      <int name="controlID">35</int>
+      <string name="title">reverb</string>
+      <string name="bounds">343 91 361 158 </string>
+    </object>
+    <object class="IBCarbonButton" id="264">
+      <int name="controlID">15</int>
+      <int name="iconPosition">0</int>
+      <string name="title">Reset</string>
+      <string name="bounds">65 248 85 308 </string>
+    </object>
+    <reference idRef="249"/>
+    <reference idRef="248"/>
+    <object class="IBCarbonCheckBox" id="224">
+      <int name="controlID">37</int>
+      <string name="title">chorus</string>
+      <string name="bounds">344 241 362 308 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="242">
+      <string name="title">Effects:</string>
+      <string name="bounds">343 35 359 85 </string>
+    </object>
+    <object class="IBCarbonWindow" id="166">
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <int name="carbonWindowClass">4</int>
+      <int name="windowPosition">1</int>
+      <string name="title">BASSMIDI synth</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <array count="4" name="subviews">
+          <object class="IBCarbonGroupBox" id="227">
+            <int name="fontStyle">0</int>
+            <string name="title">Keyboard input</string>
+            <boolean name="autoToggle">FALSE</boolean>
+            <boolean name="primary">FALSE</boolean>
+            <int name="selectedItem">0</int>
+            <array count="1" name="subviews">
+              <object class="IBCarbonStaticText" id="228">
+                <int name="controlID">20</int>
+                <int name="fontStyle">-1</int>
+                <string name="title">2 3  5 6 7  9 0  =&#10;Q W ER T Y UI O P[ ]</string>
+                <int name="justification">1</int>
+                <string name="bounds">131 35 171 308 </string>
+              </object>
+            </array>
+            <string name="bounds">105 19 186 324 </string>
+          </object>
+          <object class="IBCarbonGroupBox" id="238">
+            <int name="fontStyle">0</int>
+            <string name="title">MIDI input device</string>
+            <boolean name="autoToggle">FALSE</boolean>
+            <boolean name="primary">FALSE</boolean>
+            <int name="selectedItem">0</int>
+            <array count="4" name="subviews">
+              <reference idRef="253"/>
+              <reference idRef="257"/>
+              <object class="IBCarbonRadioGroup" id="262">
+                <int name="controlID">12</int>
+                <int name="numRows">1</int>
+                <int name="numCols">2</int>
+                <int name="intercellHeight">1</int>
+                <array count="1" name="radioTitles">
+                  <array count="2">
+                    <string>1 channel</string>
+                    <string>16 channels</string>
+                  </array>
+                </array>
+                <string name="bounds">67 35 85 225 </string>
+              </object>
+              <reference idRef="264"/>
+            </array>
+            <string name="bounds">5 19 101 324 </string>
+          </object>
+          <reference idRef="231"/>
+          <object class="IBCarbonGroupBox" id="232">
+            <int name="fontStyle">0</int>
+            <string name="title">Output</string>
+            <boolean name="autoToggle">FALSE</boolean>
+            <boolean name="primary">FALSE</boolean>
+            <int name="selectedItem">0</int>
+            <array count="8" name="subviews">
+              <reference idRef="242"/>
+              <object class="IBCarbonStaticText" id="267">
+                <string name="title">Interpolation points:</string>
+                <string name="bounds">318 35 334 158 </string>
+              </object>
+              <reference idRef="222"/>
+              <object class="IBCarbonCheckBox" id="223">
+                <int name="controlID">36</int>
+                <string name="title">echo</string>
+                <string name="bounds">343 166 361 233 </string>
+              </object>
+              <reference idRef="224"/>
+              <object class="IBCarbonCheckBox" id="230">
+                <int name="controlID">38</int>
+                <string name="title">flanger</string>
+                <string name="bounds">367 91 385 158 </string>
+              </object>
+              <object class="IBCarbonCheckBox" id="229">
+                <int name="controlID">39</int>
+                <string name="title">distortion</string>
+                <string name="bounds">367 166 385 253 </string>
+              </object>
+              <object class="IBCarbonRadioGroup" id="266">
+                <int name="controlID">50</int>
+                <int name="numRows">1</int>
+                <int name="numCols">3</int>
+                <int name="intercellHeight">1</int>
+                <array count="1" name="radioTitles">
+                  <array count="3">
+                    <string>2</string>
+                    <string>8</string>
+                    <string>16</string>
+                  </array>
+                </array>
+                <string name="bounds">317 168 335 298 </string>
+              </object>
+            </array>
+            <string name="bounds">289 19 398 324 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 418 344 </string>
+      </object>
+      <string name="windowRect">200 200 618 544 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <reference idRef="230"/>
+    <reference idRef="227"/>
+    <reference idRef="229"/>
+    <reference idRef="228"/>
+    <reference idRef="167"/>
+    <reference idRef="262"/>
+    <reference idRef="266"/>
+    <reference idRef="223"/>
+    <reference idRef="254"/>
+    <reference idRef="238"/>
+    <reference idRef="232"/>
+    <reference idRef="267"/>
+  </array>
+  <array count="25" name="allParents">
+    <reference idRef="167"/>
+    <reference idRef="238"/>
+    <reference idRef="231"/>
+    <reference idRef="231"/>
+    <reference idRef="238"/>
+    <reference idRef="231"/>
+    <reference idRef="232"/>
+    <reference idRef="238"/>
+    <reference idRef="248"/>
+    <reference idRef="231"/>
+    <reference idRef="232"/>
+    <reference idRef="232"/>
+    <reference idRef="1"/>
+    <reference idRef="232"/>
+    <reference idRef="167"/>
+    <reference idRef="232"/>
+    <reference idRef="227"/>
+    <reference idRef="166"/>
+    <reference idRef="238"/>
+    <reference idRef="232"/>
+    <reference idRef="232"/>
+    <reference idRef="253"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="232"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>Window</string>
+    <reference idRef="166"/>
+  </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
+  <unsigned_int name="nextObjectID">268</unsigned_int>
+</object>
