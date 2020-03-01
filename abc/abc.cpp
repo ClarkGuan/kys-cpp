@@ -1,12 +1,13 @@
 
-//ä¸€äº›è¾…åŠ©çš„åŠŸèƒ½
+//Ò»Ğ©¸¨ÖúµÄ¹¦ÄÜ
+//Ò»Ğ©³£ÊıµÄÉèÖÃ±È½Ï²»ºÏÀí£¬½¨ÒéÒÔµ÷ÊÔÄ£Ê½ÊÖ¶¯Ö´ĞĞ
 
 #include "File.h"
 #include "GrpIdxFile.h"
 #include "TypesABC.h"
-#include "libconvert.h"
+#include "convert.h"
 
-//è½¬æ¢äºŒè¿›åˆ¶æ–‡ä»¶ä¸ºæ–‡æœ¬
+//×ª»»¶ş½øÖÆÎÄ¼şÎªÎÄ±¾
 void trans_bin_list(std::string in, std::string out)
 {
     std::vector<int16_t> leave_list;
@@ -15,12 +16,12 @@ void trans_bin_list(std::string in, std::string out)
     std::string s;
     for (auto a : leave_list)
     {
-        convert::formatAppendString(s, "%d, ", a);
+        s += convert::formatString("%d, ", a);
     }
     convert::writeStringToFile(s, out);
 }
 
-//å¯¼å‡ºæˆ˜æ–—å¸§æ•°ä¸ºæ–‡æœ¬
+//µ¼³öÕ½¶·Ö¡ÊıÎªÎÄ±¾
 void trans_fight_frame()
 {
     for (int i = 0; i <= 300; i++)
@@ -38,7 +39,7 @@ void trans_fight_frame()
                 if (frame[j] > 0)
                 {
                     printf("%d, %d\n", j, frame[j]);
-                    convert::formatAppendString(content, "%d, %d\r\n", j, frame[j]);
+                    content += convert::formatString(content.c_str(), "%d, %d\r\n", j, frame[j]);
                 }
             }
             convert::writeStringToFile(content, path + "/fightframe.txt");
@@ -46,7 +47,7 @@ void trans_fight_frame()
     }
 }
 
-//æ‰©å±•å­˜æ¡£ï¼Œå°†çŸ­æ•´æ•°æ‰©å±•ä¸ºint32
+//À©Õ¹´æµµ£¬½«¶ÌÕûÊıÀ©Õ¹Îªint32
 int expandR(std::string idx, std::string grp, bool ranger = true)
 {
     if (!File::fileExist(grp) || !File::fileExist(idx))
@@ -55,7 +56,8 @@ int expandR(std::string idx, std::string grp, bool ranger = true)
     }
 
     std::vector<int> offset1, length1, offset2, length2;
-    auto rgrp1 = GrpIdxFile::getIdxContent(idx, grp, &offset1, &length1);
+    auto rgrp1_str = GrpIdxFile::getIdxContent(idx, grp, &offset1, &length1);
+    auto rgrp1 = rgrp1_str.c_str();
     offset2 = offset1;
     length2 = length1;
     for (auto& i : offset2)

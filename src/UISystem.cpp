@@ -2,10 +2,11 @@
 #include "UISave.h"
 #include "Event.h"
 #include "Script.h"
+#include "Engine.h"
 
 UISystem::UISystem()
 {
-    title_ = new MenuText();
+    title_ = std::make_shared<MenuText>();
     title_->setStrings({ "讀取進度", "保存進度", "我的代碼", "離開遊戲" });
     title_->setFontSize(24);
     title_->arrange(100, 50, 120, 0);
@@ -22,19 +23,18 @@ void UISystem::onPressedOK()
     if (title_->getResult() == 0)
     {
         //读档
-        auto ui_save = new UISave();
-        ui_save->setMode(0);
-        ui_save->setFontSize(22);
-        result_ = ui_save->runAtPosition(400, 100);
-        delete ui_save;
+        auto ui_load = std::make_shared<UISave>();
+        ui_load->setMode(0);
+        ui_load->setFontSize(22);
+        result_ = ui_load->runAtPosition(400, 100);
     }
     else if (title_->getResult() == 1)
     {
-        auto ui_save = new UISave();
+        //存档
+        auto ui_save = std::make_shared<UISave>();
         ui_save->setMode(1);
         ui_save->setFontSize(22);
         result_ = ui_save->runAtPosition(520, 100);
-        delete ui_save;
     }
     else if (title_->getResult() == 2)
     {
@@ -47,18 +47,24 @@ void UISystem::onPressedOK()
     title_->setResult(-1);
 }
 
-int UISystem::askExit()
+int UISystem::askExit(int mode)
 {
     static bool asking = false;
     int ret = -1;
     if (!asking)
     {
         asking = true;
-        auto menu = new MenuText();
+        auto menu = std::make_shared<MenuText>();
         menu->setStrings({ "離開遊戲", "返回開頭", "我點錯了" });
-        menu->setFontSize(50);
-        menu->arrange(0, 0, 0, 100);
-        int r = menu->runAtPosition(760, 100);
+        menu->setFontSize(24);
+        menu->arrange(0, 0, 0, 40);
+        int x = 760, y = 100;
+        if (mode == 1)
+        {
+            x = Engine::getInstance()->getWindowWidth() - 150;
+            y = 20;
+        }
+        int r = menu->runAtPosition(x, y);
         if (r == 0)
         {
             exitAll();

@@ -1,18 +1,19 @@
 #include "GameUtil.h"
 #include "Random.h"
 #include "Save.h"
-#include "libconvert.h"
-
-GameUtil GameUtil::game_util_;
+#include "convert.h"
 
 GameUtil::GameUtil()
 {
+    loadFile("../game/config/kysmod.ini");
     auto str = convert::readStringFromFile("../game/list/levelup.txt");
     level_up_list_ = convert::findNumbers<int>(str);
     if (level_up_list_.size() < Role::getMaxValue()->Level)
     {
         level_up_list_.resize(Role::getMaxValue()->Level, 60000);
     }
+    setRoleMaxValue(Role::getMaxValue());
+    setSpecialItems();
 }
 
 GameUtil::~GameUtil()
@@ -92,7 +93,7 @@ bool GameUtil::canUseItem(Role* r, Item* i)
         //上面的判断未确定则进入下面的判断链
         return test(r->Attack, i->NeedAttack)
             && test(r->Speed, i->NeedSpeed)
-            && test(r->Medcine, i->NeedMedcine)
+            && test(r->Medicine, i->NeedMedicine)
             && test(r->UsePoison, i->NeedUsePoison)
             && test(r->Detoxification, i->NeedDetoxification)
             && test(r->Fist, i->NeedFist)
@@ -135,7 +136,7 @@ void GameUtil::useItem(Role* r, Item* i)
 
     r->Poison += i->AddPoison;
 
-    r->Medcine += i->AddMedcine;
+    r->Medicine += i->AddMedicine;
     r->Detoxification += i->AddDetoxification;
     r->UsePoison += i->AddUsePoison;
 
@@ -181,7 +182,7 @@ void GameUtil::levelUp(Role* r)
         return;
     }
 
-    r->Exp -= game_util_.level_up_list_[r->Level - 1];
+    r->Exp -= getInstance()->level_up_list_[r->Level - 1];
     r->Level++;
     RandomDouble rand;
     r->PhysicalPower = Role::getMaxValue()->PhysicalPower;
@@ -205,7 +206,7 @@ void GameUtil::levelUp(Role* r)
         }
     };
 
-    check_up(r->Medcine, 0, 3);
+    check_up(r->Medicine, 0, 3);
     check_up(r->Detoxification, 0, 3);
     check_up(r->UsePoison, 0, 3);
 
@@ -237,7 +238,7 @@ int GameUtil::getLevelUpExp(int level)
     {
         return INT_MAX;
     }
-    return game_util_.level_up_list_[level - 1];
+    return getInstance()->level_up_list_[level - 1];
 }
 
 //物品经验值是否足够
@@ -255,7 +256,7 @@ bool GameUtil::canFinishedItem(Role* r)
 int GameUtil::getFinishedExpForItem(Role* r, Item* i)
 {
     //无经验设定物品不可修炼
-    if (i == nullptr || i->NeedExp <= 0)
+    if (i == nullptr || i->ItemType != 2 || i->NeedExp < 0)
     {
         return INT_MAX;
     }
@@ -344,14 +345,14 @@ void GameUtil::equip(Role* r, Item* i)
 }
 
 //医疗的效果
-int GameUtil::medcine(Role* r1, Role* r2)
+int GameUtil::medicine(Role* r1, Role* r2)
 {
     if (r1 == nullptr || r2 == nullptr)
     {
         return 0;
     }
     auto temp = r2->HP;
-    r2->HP += r1->Medcine;
+    r2->HP += r1->Medicine;
     GameUtil::limit2(r2->HP, 0, r2->MaxHP);
     return r2->HP - temp;
 }
@@ -381,4 +382,55 @@ int GameUtil::usePoison(Role* r1, Role* r2)
     r2->Poison += r1->UsePoison / 3;
     GameUtil::limit2(r2->Poison, 0, Role::getMaxValue()->Poison);
     return r2->Poison - temp;
+}
+
+void GameUtil::setRoleMaxValue(Role* role)
+{
+#define GET_VALUE_INT(v, default_v) do { role->v = getInt("constant", #v, default_v); printf("%s = %d\n", #v, role->v); } while (0)
+
+    printf("Max values of roles: \n");
+
+    GET_VALUE_INT(Level, 30);
+    GET_VALUE_INT(HP, 999);
+    GET_VALUE_INT(MP, 999);
+    GET_VALUE_INT(PhysicalPower, 100);
+
+    GET_VALUE_INT(Poison, 100);
+
+    GET_VALUE_INT(Attack, 100);
+    GET_VALUE_INT(Defence, 100);
+    GET_VALUE_INT(Speed, 100);
+
+    GET_VALUE_INT(Medicine, 100);
+    GET_VALUE_INT(UsePoison, 100);
+    GET_VALUE_INT(Detoxification, 100);
+    GET_VALUE_INT(AntiPoison, 100);
+
+    GET_VALUE_INT(Fist, 100);
+    GET_VALUE_INT(Sword, 100);
+    GET_VALUE_INT(Knife, 100);
+    GET_VALUE_INT(Unusual, 100);
+    GET_VALUE_INT(HiddenWeapon, 100);
+
+    GET_VALUE_INT(Knowledge, 100);
+    GET_VALUE_INT(Morality, 100);
+    GET_VALUE_INT(AttackWithPoison, 100);
+    GET_VALUE_INT(Fame, 999);
+    GET_VALUE_INT(IQ, 100);
+
+    GET_VALUE_INT(Exp, 99999);
+
+    printf("\n");
+
+#undef GET_VALUE_INT
+}
+
+void GameUtil::setSpecialItems()
+{
+#define GET_VALUE_INT(v) do { Item::v = getInt("constant", #v, Item::v); printf("%s = %d\n", #v, Item::v); } while (0)
+
+    GET_VALUE_INT(MoneyItemID);
+    GET_VALUE_INT(CompassItemID);
+
+#undef GET_VALUE_INT
 }

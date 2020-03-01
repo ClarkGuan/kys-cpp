@@ -1,25 +1,26 @@
+#include "UIStatus.h"
 #include "Event.h"
 #include "Font.h"
 #include "GameUtil.h"
 #include "Save.h"
 #include "ShowRoleDifference.h"
 #include "TeamMenu.h"
-#include "UIStatus.h"
-#include "libconvert.h"
+#include "convert.h"
 
 UIStatus::UIStatus()
 {
-    button_medcine_ = new Button();
-    button_medcine_->setText("醫療");
-    addChild(button_medcine_, 350, 55);
-
-    button_detoxification_ = new Button();
+    menu_ = std::make_shared<Menu>();
+    button_medicine_ = std::make_shared<Button>();
+    button_medicine_->setText("醫療");
+    menu_->addChild(button_medicine_, 350, 55);
+    button_detoxification_ = std::make_shared<Button>();
     button_detoxification_->setText("解毒");
-    addChild(button_detoxification_, 400, 55);
-
-    button_leave_ = new Button();
+    menu_->addChild(button_detoxification_, 400, 55);
+    button_leave_ = std::make_shared<Button>();
     button_leave_->setText("離隊");
-    addChild(button_leave_, 450, 55);
+    menu_->addChild(button_leave_, 450, 55);
+
+    addChild(menu_);
 }
 
 UIStatus::~UIStatus()
@@ -30,7 +31,7 @@ void UIStatus::draw()
 {
     if (role_ == nullptr || !show_button_)
     {
-        button_medcine_->setVisible(false);
+        button_medicine_->setVisible(false);
         button_detoxification_->setVisible(false);
         button_leave_->setVisible(false);
     }
@@ -39,7 +40,7 @@ void UIStatus::draw()
     {
         if (show_button_)
         {
-            button_medcine_->setVisible(role_->Medcine > 0);
+            button_medicine_->setVisible(role_->Medicine > 0);
             button_detoxification_->setVisible(role_->Detoxification > 0);
             button_leave_->setVisible(role_->ID != 0);
         }
@@ -153,7 +154,7 @@ void UIStatus::draw()
     font->draw(convert::formatString("%5d", role_->Speed), font_size, x + 444, y, select_color1(role_->Speed, Role::getMaxValue()->Speed));
 
     font->draw("醫療", font_size, x, y + 25, color_ability1);
-    font->draw(convert::formatString("%5d", role_->Medcine), font_size, x + 44, y + 25, select_color1(role_->Medcine, Role::getMaxValue()->Medcine));
+    font->draw(convert::formatString("%5d", role_->Medicine), font_size, x + 44, y + 25, select_color1(role_->Medicine, Role::getMaxValue()->Medicine));
     font->draw("解毒", font_size, x + 200, y + 25, color_ability1);
     font->draw(convert::formatString("%5d", role_->Detoxification), font_size, x + 244, y + 25, select_color1(role_->Detoxification, Role::getMaxValue()->Detoxification));
     font->draw("用毒", font_size, x + 400, y + 25, color_ability1);
@@ -185,7 +186,6 @@ void UIStatus::draw()
         {
             int x1 = x + i % 2 * 200;
             int y1 = y + 30 + i / 2 * 25;
-
             str = convert::formatString("%s", magic->Name);
             font->draw(str, font_size, x1, y1, color_ability1);
             str = convert::formatString("%3d", role_->getRoleShowLearnedMagicLevel(i));
@@ -226,11 +226,11 @@ void UIStatus::draw()
         TextureManager::getInstance()->renderTexture("item", equip->ID, x, y + 30);
         font->draw(convert::formatString("%s", equip->Name), font_size, x + 90, y + 30, color_name);
         font->draw("攻擊", 18, x + 90, y + 55, color_ability1);
-        font->draw(convert::formatString("%+d", equip->AddAttack), 18, x + 126, y + 75, select_color2(equip->AddAttack));
+        font->draw(convert::formatString("%+d", equip->AddAttack), 18, x + 126, y + 55, select_color2(equip->AddAttack));
         font->draw("防禦", 18, x + 90, y + 75, color_ability1);
-        font->draw(convert::formatString("%+d", equip->AddDefence), 18, x + 126, y + 95, select_color2(equip->AddDefence));
+        font->draw(convert::formatString("%+d", equip->AddDefence), 18, x + 126, y + 75, select_color2(equip->AddDefence));
         font->draw("輕功", 18, x + 90, y + 95, color_ability1);
-        font->draw(convert::formatString("%+d", equip->AddSpeed), 18, x + 126, y + 55, select_color2(equip->AddSpeed));
+        font->draw(convert::formatString("%+d", equip->AddSpeed), 18, x + 126, y + 95, select_color2(equip->AddSpeed));
     }
 
     x = x_ + 220;
@@ -242,11 +242,11 @@ void UIStatus::draw()
         TextureManager::getInstance()->renderTexture("item", equip->ID, x, y + 30);
         font->draw(convert::formatString("%s", equip->Name), font_size, x + 90, y + 30, color_name);
         font->draw("攻擊", 18, x + 90, y + 55, color_ability1);
-        font->draw(convert::formatString("%+d", equip->AddAttack), 18, x + 126, y + 75, select_color2(equip->AddAttack));
+        font->draw(convert::formatString("%+d", equip->AddAttack), 18, x + 126, y + 55, select_color2(equip->AddAttack));
         font->draw("防禦", 18, x + 90, y + 75, color_ability1);
-        font->draw(convert::formatString("%+d", equip->AddDefence), 18, x + 126, y + 95, select_color2(equip->AddDefence));
+        font->draw(convert::formatString("%+d", equip->AddDefence), 18, x + 126, y + 75, select_color2(equip->AddDefence));
         font->draw("輕功", 18, x + 90, y + 95, color_ability1);
-        font->draw(convert::formatString("%+d", equip->AddSpeed), 18, x + 126, y + 55, select_color2(equip->AddSpeed));
+        font->draw(convert::formatString("%+d", equip->AddSpeed), 18, x + 126, y + 95, select_color2(equip->AddSpeed));
     }
 }
 
@@ -261,43 +261,45 @@ void UIStatus::onPressedOK()
         return;
     }
 
-    if (button_leave_->getState() == Press)
+    if (menu_->getResult() == 0)
     {
-        Event::getInstance()->callLeaveEvent(role_);
-        role_ = nullptr;
-    }
-    else if (button_medcine_->getState() == Press)
-    {
-        auto team_menu = new TeamMenu();
+        auto team_menu = std::make_shared<TeamMenu>();
         team_menu->setText(convert::formatString("%s要為誰醫療", role_->Name));
         team_menu->run();
         auto role = team_menu->getRole();
-        delete team_menu;
         if (role)
         {
             Role r = *role;
-            GameUtil::medcine(role_, role);
-            auto df = new ShowRoleDifference(&r, role);
+            GameUtil::medicine(role_, role);
+            auto df = std::make_shared<ShowRoleDifference>(&r, role);
             df->setText(convert::formatString("%s接受%s醫療", role->Name, role_->Name));
             df->run();
-            delete df;
         }
     }
-    else if (button_detoxification_->getState() == Press)
+    else if (menu_->getResult() == 1)
     {
-        auto team_menu = new TeamMenu();
+        auto team_menu = std::make_shared<TeamMenu>();
         team_menu->setText(convert::formatString("%s要為誰解毒", role_->Name));
         team_menu->run();
         auto role = team_menu->getRole();
-        delete team_menu;
         if (role)
         {
             Role r = *role;
             GameUtil::detoxification(role_, role);
-            auto df = new ShowRoleDifference(&r, role);
+            auto df = std::make_shared<ShowRoleDifference>(&r, role);
             df->setText(convert::formatString("%s接受%s解毒", role->Name, role_->Name));
             df->run();
-            delete df;
         }
     }
+    else if (menu_->getResult() == 2)
+    {
+        Event::getInstance()->callLeaveEvent(role_);
+        role_ = nullptr;
+    }
+}
+
+void UIStatus::setRoleName(std::string name)
+{
+    memset(role_->Name, '\0', sizeof(role_->Name));
+    memcpy(role_->Name, name.c_str(), std::min(name.size(), sizeof(role_->Name)));
 }

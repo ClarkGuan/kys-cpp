@@ -1,7 +1,7 @@
 #include "ShowExp.h"
-#include "TextureManager.h"
 #include "Font.h"
-#include "libconvert.h"
+#include "TextureManager.h"
+#include "convert.h"
 
 ShowExp::ShowExp()
 {
@@ -15,7 +15,7 @@ ShowExp::~ShowExp()
 
 void ShowExp::draw()
 {
-    //Engine::getInstance()->fillColor({ 0, 0, 0, 128 }, 0, 0, -1, -1);
+    Engine::getInstance()->fillColor({ 0, 0, 0, 128 }, 0, 0, -1, -1);
     for (int i = 0; i < roles_.size(); i++)
     {
         auto r = roles_[i];

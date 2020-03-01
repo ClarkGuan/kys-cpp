@@ -4,12 +4,9 @@
 RandomRole::RandomRole()
 {
     setShowButton(false);
-
-    button_ok_ = new Button();
+    button_ok_ = addChild<Button>(350, 55);
     button_ok_->setText("´_¶¨");
-    addChild(button_ok_, 350, 55);
-    head_ = new Head();
-    addChild(head_, -290, 100);
+    head_ = addChild<Head>(-290, 100);
 }
 
 RandomRole::~RandomRole()
@@ -34,7 +31,7 @@ void RandomRole::onPressedOK()
     role_->Attack = 25 + r.rand_int(6);
     role_->Speed = 25 + r.rand_int(6);
     role_->Defence = 25 + r.rand_int(6);
-    role_->Medcine = 25 + r.rand_int(6);
+    role_->Medicine = 25 + r.rand_int(6);
     role_->UsePoison = 25 + r.rand_int(6);
     role_->Detoxification = 25 + r.rand_int(6);
     role_->Fist = 25 + r.rand_int(6);
@@ -43,6 +40,7 @@ void RandomRole::onPressedOK()
     role_->Unusual = 25 + r.rand_int(6);
     role_->HiddenWeapon = 25 + r.rand_int(6);
     role_->IQ = 1 + r.rand_int(100);
+    printf("IQ is %d\n", role_->IQ);
 }
 
 void RandomRole::draw()

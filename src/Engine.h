@@ -6,23 +6,27 @@
 
 #include <algorithm>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
-#if defined(_WIN32) && defined(_TINYPOT)
-#include "tinypot/PotDll.h"
+#if defined(_WIN32) && defined(WITH_SMALLPOT)
+#include "PotDll.h"
 #endif
 
 //这里是底层部分，将SDL的函数均封装了一次
 //如需更换底层，则要重新实现下面的全部功能，并重新定义全部常数和类型
 
-typedef std::function<void(uint8_t*, int)> AudioCallback;
-typedef SDL_Renderer BP_Renderer;
-typedef SDL_Window BP_Window;
-typedef SDL_Texture BP_Texture;
-typedef SDL_Rect BP_Rect;
-typedef SDL_Color BP_Color;
-typedef SDL_Keycode BP_Keycode;
+//每个SDL的函数和结构通常仅出现一次，其余的均用已封的功能完成
+
+using AudioCallback = std::function<void(uint8_t*, int)>;
+using BP_Renderer = SDL_Renderer;
+using BP_Window = SDL_Window;
+using BP_Texture = SDL_Texture;
+using BP_Rect = SDL_Rect;
+using BP_Color = SDL_Color;
+using BP_Keycode = SDL_Keycode;
+using BP_Surface = SDL_Surface;
 
 enum BP_Align
 {
@@ -39,9 +43,9 @@ enum BP_Align
 #define AMASK (0xff000000)
 
 //声音类型在其他文件中未使用
-typedef SDL_AudioSpec BP_AudioSpec;
+using BP_AudioSpec = SDL_AudioSpec;
 //这里直接使用SDL的事件结构，如果更换底层需重新实现一套相同的
-typedef SDL_Event BP_Event;
+using BP_Event = SDL_Event;
 
 class Engine
 {
@@ -49,11 +53,12 @@ private:
     Engine();
     virtual ~Engine();
 
-private:
-    static Engine engine_;
-
 public:
-    static Engine* getInstance() { return &engine_; };
+    static Engine* getInstance()
+    {
+        static Engine e;
+        return &e;
+    }
     //图形相关
 private:
     BP_Window* window_ = nullptr;
@@ -67,17 +72,20 @@ private:
     int start_w_ = 1024, start_h_ = 640;
     int win_w_, win_h_, min_x_, min_y_, max_x_, max_y_;
     double rotation_ = 0;
-    int ratio_x_ = 1, ratio_y_ = 1;
+    double ratio_x_ = 1, ratio_y_ = 1;
+
+    int render_times_ = 0;
 
 public:
     int init(void* handle = 0);
 
     void getWindowSize(int& w, int& h) { SDL_GetWindowSize(window_, &w, &h); }
     void getWindowMaxSize(int& w, int& h) { SDL_GetWindowMaximumSize(window_, &w, &h); }
-    int getWindowsWidth();
-    int getWindowsHeight();
+    int getWindowWidth();
+    int getWindowHeight();
     int getMaxWindowWidth() { return max_x_ - min_x_; }
     int getMaxWindowHeight() { return max_y_ - min_y_; }
+    void getWindowPosition(int& x, int& y) { SDL_GetWindowPosition(window_, &x, &y); }
     void setWindowSize(int w, int h);
     void setStartWindowSize(int w, int h)
     {
@@ -93,7 +101,7 @@ public:
     //void getPresentSize(int& w, int& h) { w = rect_.w; h = rect_.h; }
     int getPresentWidth() { return rect_.w; }
     int getPresentHeight() { return rect_.h; }
-    void getMainTextureSize(int& w, int& h) { SDL_QueryTexture(tex2_, nullptr, nullptr, &w, &h); }
+    void getMainTextureSize(int& w, int& h) { queryTexture(tex2_, &w, &h); }
     void destroyAssistTexture()
     {
         if (tex2_)
@@ -108,13 +116,14 @@ public:
     BP_Texture* createARGBRenderedTexture(int w, int h);
     void updateARGBTexture(BP_Texture* t, uint8_t* buffer, int pitch);
     void renderCopy(BP_Texture* t = nullptr);
-    void showLogo() { SDL_RenderCopy(renderer_, logo_, nullptr, nullptr); }
+    void renderCopy(BP_Texture* t, BP_Rect* rect1, double angle);
+    void showLogo() { renderCopy(logo_, nullptr, nullptr); }
     void renderPresent() { SDL_RenderPresent(renderer_); /*renderClear();*/ }
     void renderClear() { SDL_RenderClear(renderer_); }
     void setTextureAlphaMod(BP_Texture* t, uint8_t alpha) { SDL_SetTextureAlphaMod(t, alpha); }
     void queryTexture(BP_Texture* t, int* w, int* h) { SDL_QueryTexture(t, nullptr, nullptr, w, h); }
     void setRenderTarget(BP_Texture* t) { SDL_SetRenderTarget(renderer_, t); }
-    void resetRenderTarget() { SDL_SetRenderTarget(renderer_, nullptr); }
+    void resetRenderTarget() { setRenderTarget(nullptr); }
     void createWindow() {}
     void createRenderer() {}
     void renderCopy(BP_Texture* t, int x, int y, int w = 0, int h = 0, int inPresent = 0);
@@ -123,19 +132,26 @@ public:
     bool isFullScreen();
     void toggleFullscreen();
     BP_Texture* loadImage(const std::string& filename);
+    BP_Texture* loadImageFromMemory(const std::string& content);
     bool setKeepRatio(bool b);
     BP_Texture* transBitmapToTexture(const uint8_t* src, uint32_t color, int w, int h, int stride);
     double setRotation(double r) { return rotation_ = r; }
-    void resetWindowsPosition();
-    void setRatio(int x, int y)
+    void resetWindowPosition();
+    void setRatio(double x, double y)
     {
         ratio_x_ = x;
         ratio_y_ = y;
     }
-    void setColor(BP_Texture* tex, BP_Color c, uint8_t alpha);
+    void setColor(BP_Texture* tex, BP_Color c);
     void fillColor(BP_Color color, int x, int y, int w, int h);
-    void setRenderAssistTexture() { SDL_SetRenderTarget(renderer_, tex2_); }
+    void setRenderAssistTexture() { setRenderTarget(tex2_); }
     void renderAssistTextureToWindow();
+    void setTextureBlendMode(BP_Texture* t) { SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND); }
+
+    void resetRenderTimes(int t = 0) { render_times_ = t; }
+    int getRenderTimes() { return render_times_; }
+
+    BP_Texture* getRenderAssistTexture() { return tex2_; }
 
     //事件相关
 private:
@@ -154,6 +170,7 @@ public:
     }
     static void getMouseState(int& x, int& y) { SDL_GetMouseState(&x, &y); };
     static int pollEvent(BP_Event& e) { return SDL_PollEvent(&e); }
+    static int pollEvent() { return SDL_PollEvent(nullptr); }
     static int pushEvent(BP_Event& e) { return SDL_PushEvent(&e); }
     static void flushEvent() { SDL_FlushEvent(0); }
     static void free(void* mem) { SDL_free(mem); }
@@ -166,10 +183,6 @@ private:
 public:
     BP_Texture* createSquareTexture(int size);
     BP_Texture* createTextTexture(const std::string& fontname, const std::string& text, int size, BP_Color c);
-    void drawText(const std::string& fontname, std::string& text, int size, int x, int y, uint8_t alpha, int align, BP_Color c);
-    void drawSubtitle(const std::string& fontname, const std::string& text, int size, int x, int y, uint8_t alpha, int align);
-    //void split(std::string& s, std::string& delim, std::vector< std::string >* ret);
-    std::vector<std::string> splitString(const std::string& s, const std::string& delim);
     int showMessage(const std::string& content);
     void renderSquareTexture(BP_Rect* rect, BP_Color color, uint8_t alpha);
 
@@ -183,6 +196,16 @@ private:
 public:
     int playVideo(std::string filename);
     int saveScreen(const char* filename);
+    int saveTexture(BP_Texture* tex, const char* filename);
+
+    //输入相关
+    void startTextInput() { SDL_StartTextInput(); }
+    void stopTextInput() { SDL_StopTextInput(); }
+    void setTextInputRect(int x, int y, int w = 0, int h = 0)
+    {
+        BP_Rect r = { x, y, w, h };
+        SDL_SetTextInputRect(&r);
+    }
 };
 
 //这里直接照搬SDL
@@ -248,7 +271,13 @@ enum BP_KeyBoard
     BPK_ESCAPE = SDLK_ESCAPE,
     BPK_RETURN = SDLK_RETURN,
     BPK_DELETE = SDLK_DELETE,
-    BPK_BACKSPACE = SDLK_BACKSPACE
+    BPK_BACKSPACE = SDLK_BACKSPACE,
+    BPK_TAB = SDLK_TAB,
+    BPK_PAGEUP = SDLK_PAGEUP,
+    BPK_PAGEDOWN = SDLK_PAGEDOWN,
+    BPK_1 = SDLK_1,
+    BPK_2 = SDLK_2,
+    BPK_3 = SDLK_3,
 };
 
 enum BP_Button

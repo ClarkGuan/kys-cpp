@@ -4,9 +4,6 @@
 #include <windows.h>
 #pragma comment(lib, "user32.lib")
 #endif
-#include <cmath>
-
-Engine Engine::engine_;
 
 Engine::Engine()
 {
@@ -49,18 +46,26 @@ void Engine::renderCopy(BP_Texture* t, int x, int y, int w, int h, int inPresent
         x += rect_.x;
         y += rect_.y;
     }
-    SDL_Rect r = { x, y, w, h };
-    SDL_RenderCopy(renderer_, t, nullptr, &r);
+    BP_Rect r = { x, y, w, h };
+    renderCopy(t, nullptr, &r);
 }
 
 void Engine::renderCopy(BP_Texture* t /*= nullptr*/)
 {
     SDL_RenderCopyEx(renderer_, testTexture(t), nullptr, &rect_, rotation_, nullptr, SDL_FLIP_NONE);
+    render_times_++;
+}
+
+void Engine::renderCopy(BP_Texture* t, BP_Rect* rect1, double angle)
+{
+    SDL_RenderCopyEx(renderer_, t, nullptr, rect1, angle, nullptr, SDL_FLIP_NONE);
+    render_times_++;
 }
 
 void Engine::renderCopy(BP_Texture* t, BP_Rect* rect0, BP_Rect* rect1, int inPresent /*= 0*/)
 {
     SDL_RenderCopy(renderer_, t, rect0, rect1);
+    render_times_++;
 }
 
 void Engine::destroy()
@@ -69,9 +74,10 @@ void Engine::destroy()
     destroyAssistTexture();
     SDL_DestroyRenderer(renderer_);
     SDL_DestroyWindow(window_);
-#if defined(_WIN32) && defined(_TINYPOT)
+#if defined(_WIN32) && defined(WITH_SMALLPOT)
     PotDestory(tinypot_);
 #endif
+    SDL_Quit();
 }
 
 bool Engine::checkKeyPress(BP_Keycode key)
@@ -85,7 +91,7 @@ BP_Texture* Engine::createSquareTexture(int size)
     auto square_s = SDL_CreateRGBSurface(0, d, d, 32, RMASK, GMASK, BMASK, AMASK);
 
     //SDL_FillRect(square_s, nullptr, 0xffffffff);
-    SDL_Rect r = { 0, 0, 1, 1 };
+    BP_Rect r = { 0, 0, 1, 1 };
     auto& x = r.x;
     auto& y = r.y;
     uint8_t a = 0;
@@ -93,7 +99,7 @@ BP_Texture* Engine::createSquareTexture(int size)
     {
         for (y = 0; y < d; y++)
         {
-            a = 100 + 150 * cos(M_PI * (1.0 * y / d - 0.5));
+            a = 100 + 150 * cos(3.14159265358979323846 * (1.0 * y / d - 0.5));
             auto c = 0x00ffffff | (a << 24);
             SDL_FillRect(square_s, &r, c);
             /*if ((x - d / 2)*(x - d / 2) + (y - d / 2)*(y - d / 2) < (d / 2) * (d / 2))
@@ -103,85 +109,10 @@ BP_Texture* Engine::createSquareTexture(int size)
         }
     }
     square_ = SDL_CreateTextureFromSurface(renderer_, square_s);
-    SDL_SetTextureBlendMode(square_, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(square_, 128);
+    setTextureBlendMode(square_);
+    setTextureAlphaMod(square_, 128);
     SDL_FreeSurface(square_s);
     return square_;
-}
-
-//注意：当字符串为空时，也会返回一个空字符串
-std::vector<std::string> Engine::splitString(const std::string& s, const std::string& delim)
-{
-    std::vector<std::string> ret;
-    size_t last = 0;
-    size_t index = s.find_first_of(delim, last);
-    while (index != std::string::npos)
-    {
-        ret.push_back(s.substr(last, index - last));
-        last = index + 1;
-        index = s.find_first_of(delim, last);
-    }
-    if (index - last > 0)
-    {
-        ret.push_back(s.substr(last, index - last));
-    }
-    return ret;
-}
-
-void Engine::drawSubtitle(const std::string& fontname, const std::string& text, int size, int x, int y, uint8_t alpha, int align)
-{
-    if (alpha == 0)
-    {
-        return;
-    }
-    auto font = TTF_OpenFont(fontname.c_str(), size);
-    if (!font)
-    {
-        return;
-    }
-    SDL_Color color = { 255, 255, 255, 255 };
-    SDL_Color colorb = { 0, 0, 0, 255 };
-    auto ret = splitString(text, "\n");
-    for (int i = 0; i < ret.size(); i++)
-    {
-        if (ret[i] == "")
-        {
-            continue;
-        }
-        TTF_SetFontOutline(font, 2);
-        auto text_sb = TTF_RenderUTF8_Blended(font, ret[i].c_str(), colorb);
-        TTF_SetFontOutline(font, 0);
-        auto text_s = TTF_RenderUTF8_Blended(font, ret[i].c_str(), color);
-        //SDL_SetTextureAlphaMod(text_t, alpha);
-        SDL_Rect rectb = { 2, 2, 0, 0 };
-        SDL_BlitSurface(text_s, NULL, text_sb, &rectb);
-
-        auto text_t = SDL_CreateTextureFromSurface(renderer_, text_sb);
-
-        SDL_FreeSurface(text_s);
-        SDL_FreeSurface(text_sb);
-
-        SDL_Rect rect;
-        SDL_QueryTexture(text_t, nullptr, nullptr, &rect.w, &rect.h);
-        rect.y = y + i * (size + 2);
-
-        switch (align)
-        {
-        case BP_ALIGN_LEFT:
-            rect.x = x;
-            break;
-        case BP_ALIGN_RIGHT:
-            rect.x = x - rect.w;
-            break;
-        case BP_ALIGN_MIDDLE:
-            rect.x = x - rect.w / 2;
-            break;
-        }
-
-        SDL_RenderCopy(renderer_, text_t, nullptr, &rect);
-        SDL_DestroyTexture(text_t);
-    }
-    TTF_CloseFont(font);
 }
 
 BP_Texture* Engine::createTextTexture(const std::string& fontname, const std::string& text, int size, BP_Color c)
@@ -197,38 +128,6 @@ BP_Texture* Engine::createTextTexture(const std::string& fontname, const std::st
     SDL_FreeSurface(text_s);
     TTF_CloseFont(font);
     return text_t;
-}
-
-//此处仅接受utf8
-void Engine::drawText(const std::string& fontname, std::string& text, int size, int x, int y, uint8_t alpha, int align, BP_Color c)
-{
-    if (alpha == 0)
-    {
-        return;
-    }
-    auto text_t = createTextTexture(fontname, text, size, c);
-    if (!text_t)
-    {
-        return;
-    }
-    SDL_SetTextureAlphaMod(text_t, alpha);
-    SDL_Rect rect;
-    SDL_QueryTexture(text_t, nullptr, nullptr, &rect.w, &rect.h);
-    rect.y = y;
-    switch (align)
-    {
-    case BP_ALIGN_LEFT:
-        rect.x = x;
-        break;
-    case BP_ALIGN_RIGHT:
-        rect.x = x - rect.w;
-        break;
-    case BP_ALIGN_MIDDLE:
-        rect.x = x - rect.w / 2;
-        break;
-    }
-    SDL_RenderCopy(renderer_, text_t, nullptr, &rect);
-    SDL_DestroyTexture(text_t);
 }
 
 int Engine::init(void* handle)
@@ -248,6 +147,11 @@ int Engine::init(void* handle)
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     SDL_EventState(SDL_DROPFILE, SDL_ENABLE);
 
+    //屏蔽触摸板
+    SDL_EventState(SDL_FINGERUP, SDL_DISABLE);
+    SDL_EventState(SDL_FINGERDOWN, SDL_DISABLE);
+    SDL_EventState(SDL_FINGERMOTION, SDL_DISABLE);
+
     rect_ = { 0, 0, start_w_, start_h_ };
     logo_ = loadImage("logo.png");
     showLogo();
@@ -264,7 +168,7 @@ int Engine::init(void* handle)
     max_x_ = r.right - w;
     max_y_ = r.bottom - h;
 #else
-    SDL_Rect r;
+    BP_Rect r;
     SDL_GetDisplayBounds(0, &r);
     min_x_ = r.x;
     min_y_ = r.y;
@@ -275,23 +179,23 @@ int Engine::init(void* handle)
     square_ = createSquareTexture(100);
 
     printf("maximum width and height are: %d, %d\n", max_x_, max_y_);
-#if defined(_WIN32) && defined(_TINYPOT)
+#if defined(_WIN32) && defined(WITH_SMALLPOT)
     tinypot_ = PotCreateFromWindow(window_);
 #endif
     return 0;
 }
 
-int Engine::getWindowsWidth()
+int Engine::getWindowWidth()
 {
-    int w;
-    SDL_GetWindowSize(window_, &w, nullptr);
+    int w, h;
+    getWindowSize(w, h);
     return w;
 }
 
-int Engine::getWindowsHeight()
+int Engine::getWindowHeight()
 {
-    int h;
-    SDL_GetWindowSize(window_, nullptr, &h);
+    int w, h;
+    getWindowSize(w, h);
     return h;
 }
 
@@ -313,12 +217,19 @@ void Engine::toggleFullscreen()
     {
         SDL_SetWindowFullscreen(window_, 0);
     }
-    SDL_RenderClear(renderer_);
+    renderClear();
 }
 
 BP_Texture* Engine::loadImage(const std::string& filename)
 {
+    //printf("%s", filename.c_str());
     return IMG_LoadTexture(renderer_, filename.c_str());
+}
+
+BP_Texture* Engine::loadImageFromMemory(const std::string& content)
+{
+    auto rw = SDL_RWFromConstMem(content.data(), content.size());
+    return IMG_LoadTextureTyped_RW(renderer_, rw, 1, "png");
 }
 
 bool Engine::setKeepRatio(bool b)
@@ -344,7 +255,7 @@ void Engine::setPresentPosition()
     int w_dst = 0, h_dst = 0;
     int w_src = 0, h_src = 0;
     getWindowSize(w_dst, h_dst);
-    SDL_QueryTexture(tex_, nullptr, nullptr, &w_src, &h_src);
+    queryTexture(tex_, &w_src, &h_src);
     w_src *= ratio_x_;
     h_src *= ratio_y_;
     if (keep_ratio_)
@@ -396,8 +307,8 @@ BP_Texture* Engine::transBitmapToTexture(const uint8_t* src, uint32_t color, int
     }
     auto t = SDL_CreateTextureFromSurface(renderer_, s);
     SDL_FreeSurface(s);
-    SDL_SetTextureBlendMode(t, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureAlphaMod(t, 192);
+    setTextureBlendMode(t);
+    setTextureAlphaMod(t, 192);
     return t;
 }
 
@@ -449,18 +360,15 @@ void Engine::setWindowSize(int w, int h)
     win_h_ = std::min(max_y_ - min_y_, h);
     SDL_SetWindowSize(window_, win_w_, win_h_);
     setPresentPosition();
-
-    SDL_ShowWindow(window_);
-    SDL_RaiseWindow(window_);
-    SDL_GetWindowSize(window_, &win_w_, &win_h_);
+    getWindowSize(win_w_, win_h_);
     //resetWindowsPosition();
     //renderPresent();
 }
 
-void Engine::resetWindowsPosition()
+void Engine::resetWindowPosition()
 {
     int x, y, w, h, x0, y0;
-    SDL_GetWindowSize(window_, &w, &h);
+    getWindowSize(w, h);
     SDL_GetWindowPosition(window_, &x0, &y0);
     x = std::max(min_x_, x0);
     y = std::max(min_y_, y0);
@@ -474,15 +382,15 @@ void Engine::resetWindowsPosition()
     }
     if (x != x0 || y != y0)
     {
-        SDL_SetWindowPosition(window_, x, y);
+        setWindowPosition(x, y);
     }
 }
 
-void Engine::setColor(BP_Texture* tex, BP_Color c, uint8_t alpha)
+void Engine::setColor(BP_Texture* tex, BP_Color c)
 {
     SDL_SetTextureColorMod(tex, c.r, c.g, c.b);
-    SDL_SetTextureAlphaMod(tex, alpha);
-    SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+    setTextureAlphaMod(tex, c.a);
+    setTextureBlendMode(tex);
 }
 
 void Engine::fillColor(BP_Color color, int x, int y, int w, int h)
@@ -499,19 +407,24 @@ void Engine::fillColor(BP_Color color, int x, int y, int w, int h)
 
 void Engine::renderAssistTextureToWindow()
 {
-    SDL_SetRenderTarget(renderer_, nullptr);
-    SDL_RenderCopy(renderer_, tex2_, nullptr, nullptr);
+    resetRenderTarget();
+    renderCopy(tex2_, nullptr, nullptr);
 }
 
 void Engine::renderSquareTexture(BP_Rect* rect, BP_Color color, uint8_t alpha)
 {
-    setColor(square_, color, alpha);
+    color.a = alpha;
+    setColor(square_, color);
     renderCopy(square_, nullptr, rect);
 }
 
 int Engine::playVideo(std::string filename)
 {
-#if defined(_WIN32) && defined(_TINYPOT)
+    if (filename == "")
+    {
+        return 0;
+    }
+#if defined(_WIN32) && defined(WITH_SMALLPOT)
     return PotInputVideo(tinypot_, (char*)filename.c_str());
 #endif
     return 0;
@@ -519,20 +432,36 @@ int Engine::playVideo(std::string filename)
 
 int Engine::saveScreen(const char* filename)
 {
-    SDL_Rect rect;
+    BP_Rect rect;
     rect.x = 0;
     rect.y = 0;
-    SDL_GetWindowSize(window_, &rect.w, &rect.h);
-    SDL_Surface* sur = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, RMASK, GMASK, BMASK, AMASK);
+    getWindowSize(rect.w, rect.h);
+    BP_Surface* sur = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, RMASK, GMASK, BMASK, AMASK);
     SDL_RenderReadPixels(renderer_, &rect, SDL_PIXELFORMAT_ARGB8888, sur->pixels, rect.w * 4);
     SDL_SaveBMP(sur, filename);
+    SDL_FreeSurface(sur);
+    return 0;
+}
+
+int Engine::saveTexture(BP_Texture* tex, const char* filename)
+{
+    BP_Rect rect;
+    rect.x = 0;
+    rect.y = 0;
+    queryTexture(tex, &rect.w, &rect.h);
+    setRenderTarget(tex);
+    BP_Surface* sur = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, RMASK, GMASK, BMASK, AMASK);
+    SDL_RenderReadPixels(renderer_, &rect, SDL_PIXELFORMAT_ARGB8888, sur->pixels, rect.w * 4);
+    SDL_SaveBMP(sur, filename);
+    SDL_FreeSurface(sur);
+    resetRenderTarget();
     return 0;
 }
 
 void Engine::setWindowPosition(int x, int y)
 {
     int w, h;
-    SDL_GetWindowSize(window_, &w, &h);
+    getWindowSize(w, h);
     if (x == BP_WINDOWPOS_CENTERED)
     {
         x = min_x_ + (max_x_ - min_x_ - w) / 2;

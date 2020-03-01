@@ -22,6 +22,8 @@ public:
 
     int force_man_pic_ = -1;
 
+    int force_begin_event_ = -1;
+
 public:
     SubMapInfo* getMapInfo() { return submap_info_; }
 
@@ -63,14 +65,14 @@ public:
     virtual bool isOutScreen(int x, int y) override;
     virtual bool canWalk(int x, int y) override;
 
-    Point getPositionOnWholeEarth(int x, int y);
-
     int calManPic() { return MAN_PIC_0 + towards_ * MAN_PIC_COUNT + step_; }  //每个方向的第一张是静止图
     void forceManPic(int pic) { force_man_pic_ = pic; }
 
     void forceExit();
     void forceJumpSubScene(int submap_id, int x, int y);
 
+    void setForceBeginEvent(int e) { force_begin_event_ = e; }
 
+    void fillEarth();
 };
 

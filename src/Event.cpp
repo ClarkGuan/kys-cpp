@@ -1,36 +1,35 @@
 #include "Event.h"
-#include "MainScene.h"
-#include "SubScene.h"
-#include "Menu.h"
-#include "Save.h"
-#include "PotConv.h"
-#include "Talk.h"
-#include "libconvert.h"
 #include "Audio.h"
-#include "GameUtil.h"
 #include "BattleScene.h"
-#include "UIShop.h"
-#include "Font.h"
 #include "File.h"
-#include "Script.h"
+#include "Font.h"
+#include "GameUtil.h"
 #include "GrpIdxFile.h"
-
-Event Event::event_;
+#include "MainScene.h"
+#include "Menu.h"
+#include "PotConv.h"
+#include "Save.h"
+#include "Script.h"
+#include "SubScene.h"
+#include "Talk.h"
+#include "UIShop.h"
+#include "convert.h"
 
 Event::Event()
 {
     loadEventData();
-    talk_box_ = new Element();
-    talk_box_up_ = new Talk();
-    talk_box_down_ = new Talk();
+    talk_box_ = std::make_shared<RunNode>();
+    talk_box_up_ = std::make_shared<Talk>();
+    talk_box_down_ = std::make_shared<Talk>();
     talk_box_->addChild(talk_box_up_);
     talk_box_->addChild(talk_box_down_, 0, 400);
-    menu2_ = new MenuText({ "確認（Y）", "取消（N）" });
+    menu2_ = std::make_shared<MenuText>();
+    menu2_->setStrings({ "確認（Y）", "取消（N）" });
     menu2_->setPosition(400, 300);
     menu2_->setFontSize(24);
     menu2_->setHaveBox(true);
     menu2_->arrange(0, 50, 150, 0);
-    text_box_ = new TextBox();
+    text_box_ = std::make_shared<TextBox>();
     text_box_->setPosition(400, 200);
     text_box_->setTextPosition(-20, 100);
 }
@@ -52,11 +51,9 @@ bool Event::loadEventData()
     }
     for (int i = 0; i < length.size(); i++)
     {
-        std::string str = PotConv::cp950tocp936(talk + offset[i]);
-        convert::replaceAllString(str, "*", "");
-        talk_.push_back(str);
+        std::string str = convert::replaceAllSubString(PotConv::cp950tocp936(talk.data() + offset[i]), "*", "");
+        talk_contents_.push_back(str);
     }
-    delete talk;
     //读取事件，全部转为整型
     auto kdef = GrpIdxFile::getIdxContent("../game/resource/kdef.idx", "../game/resource/kdef.grp", &offset, &length);
     kdef_.resize(length.size());
@@ -65,10 +62,9 @@ bool Event::loadEventData()
         kdef_[i].resize(length[i] / sizeof(int16_t), -1);
         for (int k = 0; k < length[i] / sizeof(int16_t); k++)
         {
-            kdef_[i][k] = *(int16_t*)(kdef + offset[i] + k * 2);
+            kdef_[i][k] = *(int16_t*)(kdef.data() + offset[i] + k * 2);
         }
     }
-    delete kdef;
 
     //读取离队列表
     std::string leave_txt = convert::readStringFromFile("../game/list/leave.txt");
@@ -82,7 +78,7 @@ bool Event::loadEventData()
 }
 
 //返回值为是否成功执行事件
-bool Event::callEvent(int event_id, Element* subscene, int supmap_id, int item_id, int event_index, int x, int y)
+bool Event::callEvent(int event_id, RunNode* subscene, int supmap_id, int item_id, int event_index, int x, int y)
 {
     bool ret = true;
     if (event_id <= 0 || event_id >= kdef_.size()) { return false; }
@@ -100,9 +96,10 @@ bool Event::callEvent(int event_id, Element* subscene, int supmap_id, int item_i
 
     //将节点加载到绘图栈的最上，这样两个对话可以画出来
     talk_box_->setExit(false);
-    Element::addOnRootTop(talk_box_);
+    talk_box_->setVisible(true);
+    RunNode::addIntoDrawTop(talk_box_);
     int p = 0;
-    loop_ = true;
+    exit_ = false;
     int i = 0;
     auto e = kdef_[event_id];
 
@@ -112,35 +109,10 @@ bool Event::callEvent(int event_id, Element* subscene, int supmap_id, int item_i
         printf("%d ", c);
     }
     printf("\n");
-    e.resize(e.size() + 20, -1);  //后面的是缓冲区，避免出错
+    e.resize(e.size() + 20, -1);    //后面的是缓冲区，避免出错
 
     //这些宏仅为了在事件程序中简化代码，不要用在其他地方
-#define PRINT_E(n) do { for (int __i=1;__i<=n;__i++) { printf("%d, ", e[i+__i]); } printf("\b\b  \n"); } while (0)
-#define VOID_0(function) { PRINT_E(0); function(); i+=1; }
-#define VOID_1(function) { PRINT_E(1); function(e[i+1]); i+=2; }
-#define VOID_2(function) { PRINT_E(2); function(e[i+1],e[i+2]); i+=3; }
-#define VOID_3(function) { PRINT_E(3); function(e[i+1],e[i+2],e[i+3]); i+=4; }
-#define VOID_4(function) { PRINT_E(4); function(e[i+1],e[i+2],e[i+3],e[i+4]); i+=5; }
-#define VOID_5(function) { PRINT_E(5); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5]); i+=6; }
-#define VOID_6(function) { PRINT_E(6); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6]); i+=7; }
-#define VOID_7(function) { PRINT_E(7); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7]); i+=8; }
-#define VOID_8(function) { PRINT_E(8); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7],e[i+8]); i+=9; }
-#define VOID_9(function) { PRINT_E(9); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7],e[i+8],e[i+9]); i+=10; }
-#define VOID_10(function) { PRINT_E(10); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7],e[i+8],e[i+9],e[i+10]); i+=11; }
-#define VOID_11(function) { PRINT_E(11); function((e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7],e[i+8],e[i+9],e[i+10],e[i+11]); i+=12; }
-#define VOID_12(function) { PRINT_E(12); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7],e[i+8],e[i+9],e[i+10],e[i+11],e[i+12]); i+=13; }
-#define VOID_13(function) { PRINT_E(13); function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5],e[i+6],e[i+7],e[i+8],e[i+9],e[i+10],e[i+11],e[i+12],e[i+13]); i+=14; }
-
-#define BOOL_0(function) { PRINT_E(0); if (function()) {i += e[i+1];} else { i+= e[i+2]; } i += 3; }
-#define BOOL_1(function) { PRINT_E(1); if (function(e[i+1])) {i += e[i+2];} else { i+= e[i+3]; } i += 4; }
-#define BOOL_2(function) { PRINT_E(2); if (function(e[i+1],e[i+2])) {i += e[i+3];} else { i+= e[i+4]; } i += 5; }
-#define BOOL_2_2(function) { PRINT_E(2); if (function(e[i+1],e[i+4])) {i += e[i+2];} else { i+= e[i+3]; } i += 5; }
-#define BOOL_3(function) { PRINT_E(3); if (function(e[i+1],e[i+2],e[i+3])) {i += e[i+4];} else { i+= e[i+5]; } i += 6; }
-#define BOOL_4(function) { PRINT_E(4); if (function(e[i+1],e[i+2],e[i+3],e[i+4]))) {i += e[i+5];} else { i+= e[i+6]; } i += 7; }
-#define BOOL_5(function) { PRINT_E(5); if (function(e[i+1],e[i+2],e[i+3],e[i+4],e[i+5])) {i += e[i+6];} else { i+= e[i+7]; } i += 8; }
-
-#define RUN_INSTRUCT(function, INSTRUCT_TYPE) do { printf("%s: ", #function); INSTRUCT_TYPE(function); } while(0)
-#define REGISTER_INSTRUCT(code, function, INSTRUCT_TYPE) { case (code): RUN_INSTRUCT(function, INSTRUCT_TYPE); break; }
+#define REGISTER_INSTRUCT(code, function) { case (code): printf("%s ", #function); runner(&Event::function, this, e, i); break; }
 
     if (use_script_)
     {
@@ -149,85 +121,109 @@ bool Event::callEvent(int event_id, Element* subscene, int supmap_id, int item_i
     }
     else
     {
-        while (i < e.size() && loop_)
+        while (i < e.size() && !exit_)
         {
-            //printf("instruct %d\n", e[i]);
+            printf("instruct %d\n", e[i]);
             switch (e[i])
             {
-                REGISTER_INSTRUCT(1, oldTalk, VOID_3);
-                REGISTER_INSTRUCT(2, addItem, VOID_2);
-                REGISTER_INSTRUCT(3, modifyEvent, VOID_13);
-                REGISTER_INSTRUCT(4, isUsingItem, BOOL_1);
-                REGISTER_INSTRUCT(5, askBattle, BOOL_0);
-                REGISTER_INSTRUCT(6, tryBattle, BOOL_2_2);    //6这个顺序不同
-                REGISTER_INSTRUCT(8, changeMainMapMusic, VOID_1);
-                REGISTER_INSTRUCT(9, askJoin, BOOL_0);
+                REGISTER_INSTRUCT(-1, forceExit);
 
-                REGISTER_INSTRUCT(10, join, VOID_1);
-                REGISTER_INSTRUCT(11, askRest, BOOL_0);
-                REGISTER_INSTRUCT(12, rest, VOID_0);
-                REGISTER_INSTRUCT(13, lightScence, VOID_0);
-                REGISTER_INSTRUCT(14, darkScence, VOID_0);
-                REGISTER_INSTRUCT(15, dead, VOID_0);
-                REGISTER_INSTRUCT(16, inTeam, BOOL_1);
-                REGISTER_INSTRUCT(17, setSubMapLayerData, VOID_5);
-                REGISTER_INSTRUCT(18, haveItemBool, BOOL_1);
-                REGISTER_INSTRUCT(19, oldSetScencePosition, VOID_2);
+                REGISTER_INSTRUCT(1, oldTalk);
+                REGISTER_INSTRUCT(2, addItem);
+                REGISTER_INSTRUCT(3, modifyEvent);
+                REGISTER_INSTRUCT(4, isUsingItem);
+                REGISTER_INSTRUCT(5, askBattle);
+            case 6:
+                printf("%s: %d, %d, %d, %d\n", "tryBattle", e[i + 1], e[i + 2], e[i + 3], e[i + 4]);
+                if (tryBattle(e[i + 1], e[i + 4]))
+                {
+                    i += e[i + 2];
+                }
+                else
+                {
+                    i += e[i + 3];
+                }
+                i += 5;
+                break;
+                REGISTER_INSTRUCT(7, forceExit);
+                REGISTER_INSTRUCT(8, changeMainMapMusic);
+                REGISTER_INSTRUCT(9, askJoin);
 
-                REGISTER_INSTRUCT(20, teamIsFull, BOOL_0);
-                REGISTER_INSTRUCT(21, leaveTeam, VOID_1);
-                REGISTER_INSTRUCT(22, zeroAllMP, VOID_0);
-                REGISTER_INSTRUCT(23, setRoleUsePoison, VOID_2);
-                REGISTER_INSTRUCT(25, subMapViewFromTo, VOID_4);
-                REGISTER_INSTRUCT(26, add3EventNum, VOID_5);
-                REGISTER_INSTRUCT(27, playAnimation, VOID_3);
-                REGISTER_INSTRUCT(28, checkRoleMorality, BOOL_3);
-                REGISTER_INSTRUCT(29, checkRoleAttack, BOOL_3);
+                REGISTER_INSTRUCT(10, join);
+                REGISTER_INSTRUCT(11, askRest);
+                REGISTER_INSTRUCT(12, rest);
+                REGISTER_INSTRUCT(13, lightScence);
+                REGISTER_INSTRUCT(14, darkScence);
+                REGISTER_INSTRUCT(15, dead);
+                REGISTER_INSTRUCT(16, inTeam);
+                REGISTER_INSTRUCT(17, setSubMapLayerData);
+                REGISTER_INSTRUCT(18, haveItemBool);
+                REGISTER_INSTRUCT(19, oldSetScencePosition);
 
-                REGISTER_INSTRUCT(30, walkFromTo, VOID_4);
-                REGISTER_INSTRUCT(31, checkEnoughMoney, BOOL_1);
-                REGISTER_INSTRUCT(32, addItemWithoutHint, VOID_2);
-                REGISTER_INSTRUCT(33, oldLearnMagic, VOID_3);
-                REGISTER_INSTRUCT(34, addIQ, VOID_2);
-                REGISTER_INSTRUCT(35, setRoleMagic, VOID_4);
-                REGISTER_INSTRUCT(36, checkRoleSexual, BOOL_1);
-                REGISTER_INSTRUCT(37, addMorality, VOID_1);
-                REGISTER_INSTRUCT(38, changeSubMapPic, VOID_4);
-                REGISTER_INSTRUCT(39, openSubMap, VOID_1);
+                REGISTER_INSTRUCT(20, teamIsFull);
+                REGISTER_INSTRUCT(21, leaveTeam);
+                REGISTER_INSTRUCT(22, zeroAllMP);
+                REGISTER_INSTRUCT(23, setRoleUsePoison);
+                REGISTER_INSTRUCT(24, dead);
+                REGISTER_INSTRUCT(25, subMapViewFromTo);
+                REGISTER_INSTRUCT(26, add3EventNum);
+                REGISTER_INSTRUCT(27, playAnimation);
+                REGISTER_INSTRUCT(28, checkRoleMorality);
+                REGISTER_INSTRUCT(29, checkRoleAttack);
 
-                REGISTER_INSTRUCT(40, setTowards, VOID_1);
-                REGISTER_INSTRUCT(41, roleAddItem, VOID_3);
-                REGISTER_INSTRUCT(42, checkFemaleInTeam, BOOL_0);
-                REGISTER_INSTRUCT(43, haveItemBool, BOOL_1);
-                REGISTER_INSTRUCT(44, play2Amination, VOID_6);
-                REGISTER_INSTRUCT(45, addSpeed, VOID_2);
-                REGISTER_INSTRUCT(46, addMaxMP, VOID_2);
-                REGISTER_INSTRUCT(47, addAttack, VOID_2);
-                REGISTER_INSTRUCT(48, addMaxHP, VOID_2);
-                REGISTER_INSTRUCT(49, setMPType, VOID_2);
+                REGISTER_INSTRUCT(30, walkFromTo);
+                REGISTER_INSTRUCT(31, checkEnoughMoney);
+                REGISTER_INSTRUCT(32, addItemWithoutHint);
+                REGISTER_INSTRUCT(33, oldLearnMagic);
+                REGISTER_INSTRUCT(34, addIQ);
+                REGISTER_INSTRUCT(35, setRoleMagic);
+                REGISTER_INSTRUCT(36, checkRoleSexual);
+                REGISTER_INSTRUCT(37, addMorality);
+                REGISTER_INSTRUCT(38, changeSubMapPic);
+                REGISTER_INSTRUCT(39, openSubMap);
 
-                REGISTER_INSTRUCT(51, askSoftStar, VOID_0);
-                REGISTER_INSTRUCT(52, showMorality, VOID_0);
-                REGISTER_INSTRUCT(53, showFame, VOID_0);
-                REGISTER_INSTRUCT(54, openAllSubMap, VOID_0);
-                REGISTER_INSTRUCT(55, checkEventID, BOOL_2);
-                REGISTER_INSTRUCT(56, addFame, VOID_1);
-                REGISTER_INSTRUCT(57, breakStoneGate, VOID_0);
-                REGISTER_INSTRUCT(58, fightForTop, VOID_0);
-                REGISTER_INSTRUCT(59, allLeave, VOID_0);
+                REGISTER_INSTRUCT(40, setTowards);
+                REGISTER_INSTRUCT(41, roleAddItem);
+                REGISTER_INSTRUCT(42, checkFemaleInTeam);
+                REGISTER_INSTRUCT(43, haveItemBool);
+                REGISTER_INSTRUCT(44, play2Amination);
+                REGISTER_INSTRUCT(45, addSpeed);
+                REGISTER_INSTRUCT(46, addMaxMP);
+                REGISTER_INSTRUCT(47, addAttack);
+                REGISTER_INSTRUCT(48, addMaxHP);
+                REGISTER_INSTRUCT(49, setMPType);
 
-                REGISTER_INSTRUCT(60, checkSubMapPic, BOOL_3);
-                REGISTER_INSTRUCT(61, check14BooksPlaced, BOOL_0);
-                REGISTER_INSTRUCT(62, backHome, VOID_0);
-                REGISTER_INSTRUCT(63, setSexual, VOID_2);
-                REGISTER_INSTRUCT(64, shop, VOID_0);
-                REGISTER_INSTRUCT(66, playMusic, VOID_1);
-                REGISTER_INSTRUCT(67, playWave, VOID_1);
+                REGISTER_INSTRUCT(51, askSoftStar);
+                REGISTER_INSTRUCT(52, showMorality);
+                REGISTER_INSTRUCT(53, showFame);
+                REGISTER_INSTRUCT(54, openAllSubMap);
+                REGISTER_INSTRUCT(55, checkEventID);
+                REGISTER_INSTRUCT(56, addFame);
+                REGISTER_INSTRUCT(57, breakStoneGate);
+                REGISTER_INSTRUCT(58, fightForTop);
+                REGISTER_INSTRUCT(59, allLeave);
+
+                REGISTER_INSTRUCT(60, checkSubMapPic);
+                REGISTER_INSTRUCT(61, check14BooksPlaced);
+                REGISTER_INSTRUCT(62, backHome);
+                REGISTER_INSTRUCT(63, setSexual);
+                REGISTER_INSTRUCT(64, shop);
+                REGISTER_INSTRUCT(66, playMusic);
+                REGISTER_INSTRUCT(67, playWave);
 
             case 50:
                 if (e[i + 1] > 128)
                 {
-                    RUN_INSTRUCT(checkHave5Item, BOOL_5);
+                    printf("%s: ", "checkHave5Item");
+                    if (checkHave5Item(e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]))
+                    {
+                        i += e[i + 6];
+                    }
+                    else
+                    {
+                        i += e[i + 7];
+                    }
+                    i += 2;
                 }
                 else
                 {
@@ -236,19 +232,18 @@ bool Event::callEvent(int event_id, Element* subscene, int supmap_id, int item_i
                 }
                 break;
 
-            case 7:
-            case -1:
-                i += 1;
-                loop_ = false;
-                break;
             default:
                 //不存在的指令，移动一格
                 i += 1;
             }
         }
     }
-    Element::removeFromRoot(talk_box_);
+    RunNode::removeFromDraw(talk_box_);
     clearTalkBox();
+    if (subscene_)
+    {
+        subscene_->forceManPic(-1);
+    }
     return ret;
     //if (loop)
     //{ return 0; }
@@ -280,21 +275,39 @@ void Event::callLeaveEvent(Role* role)
     callEvent(getLeaveEvent(role));
 }
 
+void Event::forceExit()
+{
+    exit_ = true;
+    talk_box_up_->setExit(true);
+    talk_box_down_->setExit(true);
+}
+
+void Event::setUseScript(int u)
+{
+    use_script_ = u;
+    if (u)
+    {
+        auto str = convert::readStringFromFile("../game/script/talk.txt");
+        convert::replaceAllSubStringRef(str, "\r", "");
+        convert::replaceAllSubStringRef(str, "*", "");
+        talk_contents_ = convert::splitString(str, "\n");
+    }
+}
+
 //原对话指令
 void Event::oldTalk(int talk_id, int head_id, int style)
 {
-    Talk* talk;
-    if (style % 2 == 0)
+    if (talk_id < 0 || talk_id >= talk_contents_.size())
     {
-        talk = talk_box_up_;
+        return;
     }
-    else
+    auto talk = talk_box_up_;
+    if (style % 2 != 0)
     {
         talk = talk_box_down_;
     }
-
-    talk->setContent(talk_[talk_id]);
-    printf("%s\n", PotConv::to_read(talk_[talk_id]).c_str());
+    talk->setContent(talk_contents_[talk_id]);
+    printf("%s\n", PotConv::to_read(talk_contents_[talk_id]).c_str());
     talk->setHeadID(head_id);
     if (style == 2 || style == 3)
     {
@@ -315,7 +328,7 @@ void Event::oldTalk(int talk_id, int head_id, int style)
 void Event::addItem(int item_id, int count)
 {
     addItemWithoutHint(item_id, count);
-    text_box_->setText(convert::formatString("获得%s%d", Save::getInstance()->getItem(item_id)->Name, count));
+    text_box_->setText(convert::formatString("獲得%s%d", Save::getInstance()->getItem(item_id)->Name, count));
     text_box_->setTexture("item", item_id);
     text_box_->run();
     text_box_->setTexture("item", -1);
@@ -358,11 +371,11 @@ bool Event::askBattle()
 
 bool Event::tryBattle(int battle_id, int get_exp)
 {
-    auto battle = new BattleScene(battle_id);
+    auto battle = std::make_shared<BattleScene>();
+    battle->setID(battle_id);
     battle->setHaveFailExp(get_exp);
     int result = battle->run();
     //int result = 0;    //测试用
-    delete battle;
     clearTalkBox();
 
     return result == 0;
@@ -430,11 +443,11 @@ void Event::rest()
 
 void Event::lightScence()
 {
+    clearTalkBox();
     if (subscene_)
     {
         subscene_->lightScene();
     }
-    clearTalkBox();
 }
 
 void Event::darkScence()
@@ -447,7 +460,7 @@ void Event::darkScence()
 
 void Event::dead()
 {
-    Element::exitAll(1);
+    RunNode::exitAll(1);
     forceExit();
 }
 
@@ -574,7 +587,7 @@ void Event::playAnimation(int event_index, int begin_pic, int end_pic)
         }
         subscene_->forceManPic(end_pic / 2);
         subscene_->drawAndPresent();
-        subscene_->forceManPic(-1);
+        //subscene_->forceManPic(-1);
     }
     else
     {
@@ -745,6 +758,7 @@ void Event::openSubMap(int submap_id)
 void Event::setTowards(int towards)
 {
     subscene_->towards_ = (Towards)towards;
+    subscene_->force_man_pic_ = -1;
 }
 
 void Event::roleAddItem(int role_id, int item_id, int count)
@@ -1029,6 +1043,14 @@ bool Event::check14BooksPlaced()
     return true;
 }
 
+void Event::backHome(int event_index1, int begin_pic1, int end_pic1, int event_index2, int begin_pic2, int end_pic2)
+{
+    subscene_->forceManPic(-2);
+    play2Amination(event_index1, begin_pic1, end_pic1, event_index2, begin_pic2, end_pic2);
+    RunNode::exitAll(1);
+    forceExit();
+}
+
 void Event::setSexual(int role_id, int value)
 {
     Save::getInstance()->getRole(role_id)->Sexual = value;
@@ -1037,7 +1059,7 @@ void Event::setSexual(int role_id, int value)
 void Event::shop()
 {
     oldTalk(0xB9E, 0x6F, 0);
-    auto shop = new UIShop();
+    auto shop = std::make_shared<UIShop>();
     shop->setShopID(rand_.rand_int(5));
     int result = shop->run();
     if (result < 0)
@@ -1092,32 +1114,31 @@ void Event::clearTalkBox()
 void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6, int* code_ptr)
 {
     int index = 0, len = 0, offset = 0;
-    char* char_ptr = nullptr, *char_ptr1 = nullptr;
+    char *char_ptr = nullptr, *char_ptr1 = nullptr;
     int* save_int_ptr = nullptr;
     int i1 = 0;
     int i2 = 0;
     std::string str;
     std::vector<std::string> strs;
-    MenuText* menu = nullptr;
 
     auto save = Save::getInstance();
 
     switch (code)
     {
-    case 0: //赋值
+    case 0:    //赋值
         x50[e1] = e2;
         break;
-    case 1: //数组赋值，e2不为0表示仅要一个字节
+    case 1:    //数组赋值，e2不为0表示仅要一个字节
         index = e3 + e_GetValue(0, e1, e4);
         x50[index] = e_GetValue(1, e1, e4);
         if (e2) { x50[index] = x50[index] & 0xff; }
         break;
-    case 2: //数组取值
+    case 2:    //数组取值
         index = e3 + e_GetValue(0, e1, e4);
         x50[e5] = x50[index];
         if (e2) { x50[index] = x50[index] & 0xff; }
         break;
-    case 3: //基本运算
+    case 3:    //基本运算
         index = e_GetValue(0, e1, e5);
         switch (e2)
         {
@@ -1141,7 +1162,7 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
             break;
         }
         break;
-    case 4: //判断变量，改写跳转标记
+    case 4:    //判断变量，改写跳转标记
         x50[0x7000] = 0;
         index = e_GetValue(0, e1, e4);
         switch (e2)
@@ -1171,31 +1192,32 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
             x50[0x7000] = 1;
         }
         break;
-    case 5: //全部清零
+    case 5:    //全部清零
         memset(x50, 0, sizeof(x50));
         break;
     case 6: break;
     case 7: break;
-    case 8: //读对话
+    case 8:    //读对话
         index = e_GetValue(0, e1, e2);
         char_ptr = (char*)&x50[e3];
-        sprintf(char_ptr, "%s", talk_[index].c_str());
+        sprintf(char_ptr, "%s", talk_contents_[index].c_str());
         break;
-    case 9: //格式化字串
+    case 9:    //格式化字串
         e4 = e_GetValue(0, e1, e4);
         char_ptr = (char*)&x50[e2];
         char_ptr1 = (char*)&x50[e3];
         sprintf(char_ptr, char_ptr1, e4);
         break;
-    case 10: //字串长度
-        x50[e2] = strlen((char*)&x50[e1]);  //感觉这样有问题，不管了
+    case 10:    //字串长度
+        //感觉这样有问题，不管了
+        x50[e2] = strlen((char*)&x50[e1]);
         break;
-    case 11: //合并字串
+    case 11:    //合并字串
         char_ptr = (char*)&x50[e1];
         char_ptr1 = (char*)&x50[e2];
         sprintf(char_ptr, "%s%s", char_ptr, char_ptr1);
         break;
-    case 12:  //制造一个是空格的字串
+    case 12:    //制造一个是空格的字串
         //Note: here the width of one 'space' is the same as one Chinese character.
         e3 = e_GetValue(0, e1, e3);
         char_ptr = (char*)&x50[e2];
@@ -1209,7 +1231,7 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
     case 13: break;
     case 14: break;
     case 15: break;
-    case 16: //写存档数据
+    case 16:    //写存档数据
         e3 = e_GetValue(0, e1, e3);
         e4 = e_GetValue(1, e1, e4);
         e5 = e_GetValue(2, e1, e5);
@@ -1224,7 +1246,7 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         }
         if (save_int_ptr) { *save_int_ptr = e5; }
         break;
-    case 17: //读存档数据
+    case 17:    //读存档数据
         e3 = e_GetValue(0, e1, e3);
         e4 = e_GetValue(1, e1, e4);
         switch (e2)
@@ -1236,27 +1258,27 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         case 4: x50[e5] = *(int*)((char*)(save->getShop(e3)) + e4); break;
         }
         break;
-    case 18: //写队伍数据
+    case 18:    //写队伍数据
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         save->Team[e2] = e3;
         break;
-    case 19: //读队伍数据
+    case 19:    //读队伍数据
         e2 = e_GetValue(0, e1, e2);
         x50[e3] = save->Team[e2];
         break;
-    case 20:  //获取物品个数
+    case 20:    //获取物品个数
         e2 = e_GetValue(0, e1, e2);
         x50[e3] = save->getItemCountInBag(e2);
         break;
-    case 21: //写场景事件数据
+    case 21:    //写场景事件数据
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
         e5 = e_GetValue(3, e1, e5);
         *(MAP_INT*)(save->getSubMapInfo(e2)->Event(e3) + e4) = e5;
         break;
-    case 22: //读场景事件数据
+    case 22:    //读场景事件数据
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
@@ -1277,14 +1299,14 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         e5 = e_GetValue(3, e1, e5);
         x50[e6] = save->getSubMapInfo(e2)->LayerData(e3, e4, e5);
         break;
-    case 25: //强行写入内存地址，不要了，自己看着办
+    case 25:    //强行写入内存地址，不要了，自己看着办
         e5 = e_GetValue(0, e1, e5);
         e6 = e_GetValue(1, e1, e6);
         break;
-    case 26: //读内存地址，同上
+    case 26:    //读内存地址，同上
         e6 = e_GetValue(0, e1, e6);
         break;
-    case 27: //读名字到变量
+    case 27:    //读名字到变量
         e3 = e_GetValue(0, e1, e3);
         char_ptr = (char*)&x50[e4];
         switch (e2)
@@ -1295,30 +1317,30 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         case 3: sprintf(char_ptr, "%s", save->getMagic(e3)->Name); break;
         }
         break;
-    case 28: //28~31为战斗指令，不要了
+    case 28:    //28~31为战斗指令，不要了
         break;
     case 29: break;
     case 30: break;
     case 31: break;
-    case 32: //修改下一条指令
+    case 32:    //修改下一条指令
         e3 = e_GetValue(0, e1, e3);
         *(code_ptr + e3) = x50[e2];
         break;
-    case 33: //画一个字串
+    case 33:    //画一个字串
         e3 = e_GetValue(0, e1, e3);
         e4 = e_GetValue(1, e1, e4);
         e5 = e_GetValue(2, e1, e5);
         char_ptr = (char*)&x50[e2];
-        Font::getInstance()->draw(char_ptr, 20, e3, e4/*BP_Color(e5)*/);
+        Font::getInstance()->draw(char_ptr, 20, e3, e4 /*BP_Color(e5)*/);
         break;
-    case 34: //画一个背景框
+    case 34:    //画一个背景框
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
         e5 = e_GetValue(3, e1, e5);
         Engine::getInstance()->fillColor({ 0, 0, 0, 128 }, e2, e3, e4, e5);
         break;
-    case 35: //暂停等待按键
+    case 35:    //暂停等待按键
         text_box_->setText("");
         text_box_->setTexture("", 0);
         x50[e1] = text_box_->run();
@@ -1330,7 +1352,7 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         case SDLK_DOWN: x50[e1] = 152; break;
         }
         break;
-    case 36: //画带背景框的字串等待按键，如果按下的是y设置跳转指示为0
+    case 36:    //画带背景框的字串等待按键，如果按下的是y设置跳转指示为0
         e3 = e_GetValue(0, e1, e3);
         e4 = e_GetValue(1, e1, e4);
         e5 = e_GetValue(2, e1, e5);
@@ -1340,28 +1362,29 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         talk_box_up_->setHeadStyle(2);
         x50[0x7000] = talk_box_up_->run();
         break;
-    case 37: //延时
+    case 37:    //延时
         Engine::getInstance()->delay(e2 = e_GetValue(0, e1, e2));
         break;
-    case 38: //随机数
+    case 38:    //随机数
         e2 = e_GetValue(0, e1, e2);
         x50[e3] = rand_.rand_int(e2);
         break;
     case 39:
-    case 40: //菜单
+    case 40:    //菜单
+    {
         e2 = e_GetValue(0, e1, e2);
         e5 = e_GetValue(1, e1, e5);
         e6 = e_GetValue(2, e1, e6);
-        menu = new MenuText();
         for (int i = 0; i < e2 - 1; i++)
         {
             strs.push_back((char*)x50[x50[e3 + i]]);
         }
+        auto menu = std::make_shared<MenuText>();
         menu->setStrings(strs);
         x50[e4] = menu->run();
-        delete menu;
-        break;
-    case 41: //画一张图
+    }
+    break;
+    case 41:    //画一张图
         e3 = e_GetValue(0, e1, e3);
         e4 = e_GetValue(1, e1, e4);
         e5 = e_GetValue(2, e1, e5);
@@ -1371,24 +1394,24 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         case 1: TextureManager::getInstance()->renderTexture("head", e5, e3, e4); break;
         }
         break;
-    case 42: //改变主地图坐标
+    case 42:    //改变主地图坐标
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(0, e1, e3);
-        MainScene::getIntance()->setManPosition(e2, e3);
+        MainScene::getInstance()->setManPosition(e2, e3);
         break;
-    case 43: //调用另外事件
+    case 43:    //调用另外事件
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
         e5 = e_GetValue(3, e1, e5);
         e6 = e_GetValue(4, e1, e6);
         x50[0x7100] = e3;
-        x50[0x77101] = e4;
-        x50[0x77102] = e5;
-        x50[0x77103] = e6;
+        x50[0x7101] = e4;
+        x50[0x7102] = e5;
+        x50[0x7103] = e6;
         callEvent(e2);
         break;
-    case 44: //44~47为战斗指令，不要了
+    case 44:    //44~47为战斗指令，不要了
         break;
     case 45: break;
     case 46:
@@ -1406,14 +1429,14 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         }
         break;
     case 47: break;
-    case 48: //自己调试吧，懒得管
+    case 48:    //自己调试吧，懒得管
         for (int i = e1; i < e1 + e2 - 1; i++)
         {
             printf("x50[%d]=%d\n", i, x50[i]);
         }
         break;
     case 49: break;
-    case 50: //输入名字，删除
+    case 50:    //输入名字，删除
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
@@ -1429,7 +1452,7 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
         char_ptr1 = (char*)&str[1];
         break;
     case 51: break;
-    case 52: //判断某人是否已掌握某武学等级
+    case 52:    //判断某人是否已掌握某武学等级
         e2 = e_GetValue(0, e1, e2);
         e3 = e_GetValue(1, e1, e3);
         e4 = e_GetValue(2, e1, e4);
@@ -1447,4 +1470,3 @@ void Event::instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e
     default: break;
     }
 }
-

@@ -1,21 +1,20 @@
 #include "BattleMenu.h"
-#include "Save.h"
-#include "Random.h"
 #include "BattleScene.h"
-#include "libconvert.h"
 #include "Event.h"
 #include "PotConv.h"
+#include "Random.h"
+#include "Save.h"
+#include "convert.h"
 
-BattleActionMenu::BattleActionMenu()
+BattleActionMenu::BattleActionMenu(BattleScene* b)
 {
     setStrings({ "移動", "武學", "用毒", "解毒", "醫療", "暗器", "藥品", "等待", "狀態", "自動", "結束" });
-    distance_layer_ = new MapSquareInt();
-    distance_layer_->resize(BATTLEMAP_COORD_COUNT);
+    distance_layer_.resize(BATTLEMAP_COORD_COUNT);
+    battle_scene_ = b;
 }
 
 BattleActionMenu::~BattleActionMenu()
 {
-    delete distance_layer_;
 }
 
 void BattleActionMenu::setRole(Role* r)
@@ -45,7 +44,7 @@ void BattleActionMenu::setRole(Role* r)
     {
         childs_text_["解毒"]->setVisible(false);
     }
-    if (role_->Medcine <= 0 || role_->PhysicalPower < 10)
+    if (role_->Medicine <= 0 || role_->PhysicalPower < 10)
     {
         childs_text_["醫療"]->setVisible(false);
     }
@@ -54,22 +53,33 @@ void BattleActionMenu::setRole(Role* r)
         childs_text_["暗器"]->setVisible(false);
     }
 
-    childs_text_["等待"]->setVisible(false);  //禁用等待
+    if (role_->Competing)
+    {
+        childs_text_["藥品"]->setVisible(false);
+        childs_text_["暗器"]->setVisible(false);
+    }
+
+    childs_text_["等待"]->setVisible(false);    //禁用等待
 
     setFontSize(20);
     arrange(0, 0, 0, 28);
-    if (start_ == 0 || !getChild(pass_child_)->getVisible())
+    if (start_ == 0 || !getChild(active_child_)->getVisible())
     {
-        pass_child_ = findFristVisibleChild();
-        forcePassChild();
+        active_child_ = findFristVisibleChild();
+        forceActiveChild();
     }
-    start_ = pass_child_;
-    if (!role_->Moved) { role_->AI_Action = -1; }  //设置为未计算过ai的行动
+    if (!role_->Moved)
+    {
+        role_->AI_Action = -1;
+    }    //设置为未计算过ai的行动
 }
 
 void BattleActionMenu::dealEvent(BP_Event& e)
 {
-    if (battle_scene_ == nullptr) { return; }
+    if (battle_scene_ == nullptr)
+    {
+        return;
+    }
     //如果是ai，计算行动，不再进入其他循环
     if (role_->isAuto())
     {
@@ -78,7 +88,7 @@ void BattleActionMenu::dealEvent(BP_Event& e)
         setAllChildState(Normal);
         childs_[act]->setState(Press);
         setExit(true);
-        setVisible(false);  //AI不画菜单了，太乱
+        setVisible(false);    //AI不画菜单了，太乱
         return;
     }
     Menu::dealEvent(e);
@@ -88,7 +98,7 @@ void BattleActionMenu::dealEvent(BP_Event& e)
 int BattleActionMenu::autoSelect(Role* role)
 {
     std::vector<Role*> friends, enemies;
-    for (auto r : battle_scene_->battle_roles_)
+    for (auto r : battle_scene_->getBattleRoles())
     {
         if (r->Team == role->Team)
         {
@@ -102,6 +112,10 @@ int BattleActionMenu::autoSelect(Role* role)
 
     //ai为每种行动评分
     std::vector<AIAction> ai_action;
+
+    Random<double> rand;    //梅森旋转法随机数
+    rand.set_seed();
+    rand.set_parameter(0, 1);
 
     if (role->AI_Action == -1)
     {
@@ -125,8 +139,7 @@ int BattleActionMenu::autoSelect(Role* role)
 
             //考虑吃药
             std::string action_text = "藥品";
-            if (childs_text_[action_text]->getVisible() &&
-                (role->HP < 0.2 * role->MaxHP || role->MP < 0.2 * role->MaxMP || role_->PhysicalPower < 0.2 * Save::getInstance()->MaxPhysicalPower))
+            if (childs_text_[action_text]->getVisible() && (role->HP < 0.2 * role->MaxHP || role->MP < 0.2 * role->MaxMP || role_->PhysicalPower < 0.2 * Save::getInstance()->MaxPhysicalPower))
             {
                 AIAction aa;
                 aa.Action = getResultFromString(action_text);
@@ -151,7 +164,7 @@ int BattleActionMenu::autoSelect(Role* role)
                     if (aa.point > 0)
                     {
                         aa.item = item;
-                        aa.point *= 1.5;  //自保的系数略大
+                        aa.point *= 1.5;    //自保的系数略大
                         getFarthestToAll(role, enemies, aa.MoveX, aa.MoveY);
                         ai_action.push_back(aa);
                     }
@@ -170,9 +183,9 @@ int BattleActionMenu::autoSelect(Role* role)
                         if (r2->Poison > 50)
                         {
                             AIAction aa;
-                            calAIActionNearest(r2, aa);    //计算目标，和离目标最近的点，下同
+                            calAIActionNearest(r2, aa);                                             //计算目标，和离目标最近的点，下同
                             int action_dis = battle_scene_->calActionStep(role->Detoxification);    //计算可以行动的距离
-                            if (action_dis >= calNeedActionDistance(aa))    //与需要行动的距离比较
+                            if (action_dis >= calNeedActionDistance(aa))                            //与需要行动的距离比较
                             {
                                 //若在距离之内则考虑使用，以下各个都类似
                                 aa.Action = getResultFromString(action_text);
@@ -191,11 +204,11 @@ int BattleActionMenu::autoSelect(Role* role)
                         {
                             AIAction aa;
                             calAIActionNearest(r2, aa);
-                            int action_dis = battle_scene_->calActionStep(role->Medcine);
+                            int action_dis = battle_scene_->calActionStep(role->Medicine);
                             if (action_dis >= calNeedActionDistance(aa))
                             {
                                 aa.Action = getResultFromString(action_text);
-                                aa.point = r2->Medcine;
+                                aa.point = r2->Medicine;
                                 ai_action.push_back(aa);
                             }
                         }
@@ -216,7 +229,10 @@ int BattleActionMenu::autoSelect(Role* role)
                     {
                         aa.Action = getResultFromString(action_text);
                         aa.point = (std::min)(Save::getInstance()->MaxPosion - r2->Poison, role->UsePoison) / 2;
-                        if (r2->HP < 10) { aa.point = 1; }
+                        if (r2->HP < 10)
+                        {
+                            aa.point = 1;
+                        }
                         ai_action.push_back(aa);
                     }
                 }
@@ -241,7 +257,7 @@ int BattleActionMenu::autoSelect(Role* role)
                         {
                             aa.point = r2->HP * 1.25;
                         }
-                        aa.point *= 0.9;    //暗器分值略低
+                        aa.point *= 0.5;    //暗器分值略低
                         aa.item = item;
                         ai_action.push_back(aa);
                     }
@@ -261,7 +277,10 @@ int BattleActionMenu::autoSelect(Role* role)
                 {
                     int max_hurt = -1;
                     auto magic = Save::getInstance()->getRoleLearnedMagic(role, i);
-                    if (magic == nullptr) { continue; }
+                    if (magic == nullptr)
+                    {
+                        continue;
+                    }
                     int level_index = role->getRoleMagicLevelIndex(i);
 
                     battle_scene_->calSelectLayerByMagic(aa.MoveX, aa.MoveY, role->Team, magic, level_index);
@@ -284,7 +303,7 @@ int BattleActionMenu::autoSelect(Role* role)
                                 }
                                 if (total_hurt > -1)
                                 {
-                                    //printf("AI %s %s (%d, %d): %d\n", role->Name, magic->Name, ix, iy, total_hurt);
+                                    //printf("AI %s %s (%d, %d): %d\n", PotConv::to_read(role->Name).c_str(), PotConv::to_read(magic->Name).c_str(), ix, iy, total_hurt);
                                 }
                             }
                         }
@@ -297,15 +316,12 @@ int BattleActionMenu::autoSelect(Role* role)
         }
         //查找最大评分的行动
         double max_point = -1;
-        Random<double> rand;    //梅森旋转法随机数
-        rand.set_seed();
-        rand.set_parameter(0, 10);
         for (auto aa : ai_action)
         {
             printf("AI %s: %s ", PotConv::to_read(role->Name).c_str(), PotConv::to_read(getStringFromResult(aa.Action)).c_str());
             if (aa.item) { printf("%s ", PotConv::to_read(aa.item->Name).c_str()); }
             if (aa.magic) { printf("%s ", PotConv::to_read(aa.magic->Name).c_str()); }
-            double r = rand.rand();    //用于同分的情况，可以随机选择
+            double r = rand.rand() * 10;    //用于同分的情况，可以随机选择
             printf("score %.2f(%.2f)\n", aa.point, r);
             //若评分仅有一个随机数的值，说明不在范围内，仅移动并结束
             if (aa.point == 0)
@@ -333,37 +349,40 @@ int BattleActionMenu::autoSelect(Role* role)
 }
 
 //计算距离
-void BattleActionMenu::calDistanceLayer(int x, int y, int max_step/*=64*/)
+void BattleActionMenu::calDistanceLayer(int x, int y, int max_step /*=64*/)
 {
-    distance_layer_->setAll(max_step + 1);
+    distance_layer_.setAll(max_step + 1);
     std::vector<Point> cal_stack;
-    distance_layer_->data(x, y) = 0;
+    distance_layer_.data(x, y) = 0;
     cal_stack.push_back({ x, y });
     int count = 0;
     int step = 0;
     while (step <= 64)
     {
         std::vector<Point> cal_stack_next;
-        auto check_next = [&](Point p1)->void
+        auto check_next = [&](Point p1) -> void
         {
             //未计算过且可以走的格子参与下一步的计算
-            if (distance_layer_->data(p1.x, p1.y) == max_step + 1 && battle_scene_->canWalk(p1.x, p1.y))
+            if (distance_layer_.data(p1.x, p1.y) == max_step + 1 && battle_scene_->canWalk(p1.x, p1.y))
             {
-                distance_layer_->data(p1.x, p1.y) = step + 1;
+                distance_layer_.data(p1.x, p1.y) = step + 1;
                 cal_stack_next.push_back(p1);
                 count++;
             }
         };
         for (auto p : cal_stack)
         {
-            distance_layer_->data(p.x, p.y) = step;
+            distance_layer_.data(p.x, p.y) = step;
             check_next({ p.x - 1, p.y });
             check_next({ p.x + 1, p.y });
             check_next({ p.x, p.y - 1 });
             check_next({ p.x, p.y + 1 });
-            if (count >= distance_layer_->squareSize()) { break; }  //最多计算次数，避免死掉
+            if (count >= distance_layer_.squareSize())
+            {
+                break;
+            }    //最多计算次数，避免死掉
         }
-        if (cal_stack_next.size() == 0) { break; }  //无新的点，结束
+        if (cal_stack_next.size() == 0) { break; }    //无新的点，结束
         cal_stack = cal_stack_next;
         step++;
     }
@@ -371,7 +390,7 @@ void BattleActionMenu::calDistanceLayer(int x, int y, int max_step/*=64*/)
 
 void BattleActionMenu::getFarthestToAll(Role* role, std::vector<Role*> roles, int& x, int& y)
 {
-    Random<double> rand;   //梅森旋转法随机数
+    Random<double> rand;    //梅森旋转法随机数
     rand.set_seed();
     //选择离所有敌方距离和最大的点
     double max_dis = 0;
@@ -399,7 +418,7 @@ void BattleActionMenu::getFarthestToAll(Role* role, std::vector<Role*> roles, in
 
 void BattleActionMenu::getNearestPosition(int x0, int y0, int& x, int& y)
 {
-    Random<double> rand;   //梅森旋转法随机数
+    Random<double> rand;    //梅森旋转法随机数
     rand.set_seed();
     calDistanceLayer(x0, y0);
     double min_dis = BATTLEMAP_COORD_COUNT * BATTLEMAP_COORD_COUNT;
@@ -409,7 +428,7 @@ void BattleActionMenu::getNearestPosition(int x0, int y0, int& x, int& y)
         {
             if (battle_scene_->canSelect(ix, iy))
             {
-                double cur_dis = distance_layer_->data(ix, iy) + rand.rand();
+                double cur_dis = distance_layer_.data(ix, iy) + rand.rand();
                 if (cur_dis < min_dis)
                 {
                     min_dis = cur_dis;
@@ -457,7 +476,10 @@ int BattleActionMenu::calNeedActionDistance(AIAction& aa)
 
 void BattleMagicMenu::onEntrance()
 {
-    if (role_ == nullptr) { return; }
+    if (role_ == nullptr)
+    {
+        return;
+    }
     if (role_->isAuto())
     {
         magic_ = role_->AI_Magic;
@@ -467,7 +489,7 @@ void BattleMagicMenu::onEntrance()
         setVisible(false);
         return;
     }
-    forcePassChild();
+    forceActiveChild();
 }
 
 void BattleMagicMenu::setRole(Role* r)
@@ -497,16 +519,22 @@ void BattleMagicMenu::setRole(Role* r)
     {
         int w, h;
         child->getSize(w, h);
-        if (w <= 0) { child->setVisible(false); }
+        if (w <= 0)
+        {
+            child->setVisible(false);
+        }
     }
     arrange(0, 0, 0, 30);
 }
 
 void BattleMagicMenu::onPressedOK()
 {
-    pressIndexToResult();
+    checkActiveToResult();
     magic_ = Save::getInstance()->getRoleLearnedMagic(role_, result_);
-    if (magic_) { setExit(true); }
+    if (magic_)
+    {
+        setExit(true);
+    }
 }
 
 BattleItemMenu::BattleItemMenu()
@@ -516,7 +544,10 @@ BattleItemMenu::BattleItemMenu()
 
 void BattleItemMenu::onEntrance()
 {
-    if (role_ == nullptr) { return; }
+    if (role_ == nullptr)
+    {
+        return;
+    }
     if (role_->isAuto())
     {
         if (role_->AI_Item)
@@ -564,10 +595,8 @@ std::vector<Item*> BattleItemMenu::getAvaliableItems()
 
 std::vector<Item*> BattleItemMenu::getAvaliableItems(Role* role, int type)
 {
-    auto item_menu = new BattleItemMenu();
-    item_menu->setRole(role);
-    item_menu->setForceItemType(type);
-    auto items = item_menu->getAvaliableItems();
-    delete item_menu;
-    return items;
+    BattleItemMenu item_menu;
+    item_menu.setRole(role);
+    item_menu.setForceItemType(type);
+    return item_menu.getAvaliableItems();
 }

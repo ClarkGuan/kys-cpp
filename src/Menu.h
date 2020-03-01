@@ -10,9 +10,11 @@ public:
     virtual void dealEvent(BP_Event& e) override;
     void arrange(int x, int y, int inc_x, int inc_y);
     virtual void onPressedOK() override;
+    virtual void onPressedCancel() override;
     virtual void onEntrance() override;
+    virtual void onExit() override;
     void setStartItem(int s) { start_ = s; }
-    DEFAULT_CANCEL_EXIT;
+    bool checkAllNormal();
 protected:
     int start_ = 0;
 };
@@ -27,7 +29,7 @@ public:
     //void draw() override;
 
     std::vector<std::string> strings_;
-    std::map<std::string, Element*> childs_text_;
+    std::map<std::string, std::shared_ptr<RunNode>> childs_text_;
     std::string getStringFromResult(int i);
     std::string getResultString() { return getStringFromResult(result_); }
     int getResultFromString(std::string str);

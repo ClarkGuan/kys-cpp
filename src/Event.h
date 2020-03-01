@@ -1,7 +1,8 @@
 #pragma once
-#include "Element.h"
+#include "FunctionTrait.h"
 #include "Menu.h"
 #include "Random.h"
+#include "RunNode.h"
 #include "SubScene.h"
 #include "Talk.h"
 
@@ -12,17 +13,17 @@ class Event
 private:
     Event();
     virtual ~Event();
-    static Event event_;
 
 public:
     static Event* getInstance()
     {
-        return &event_;
+        static Event e;
+        return &e;
     }
 
 private:
     std::vector<int> offset, length;
-    std::vector<std::string> talk_;
+    std::vector<std::string> talk_contents_;
     std::vector<std::vector<int>> kdef_;
 
     int leave_event_0_;
@@ -30,14 +31,13 @@ private:
 
     //两个对话，用于上面和下面，两个可以同时显示
     //视需要可增加更多
-    Element* talk_box_;
-    Talk* talk_box_up_ = nullptr;
-    Talk* talk_box_down_ = nullptr;
+    std::shared_ptr<RunNode> talk_box_;
+    std::shared_ptr<Talk> talk_box_up_, talk_box_down_;
 
     //专用于显示确认和取消选项
-    MenuText* menu2_ = nullptr;
+    std::shared_ptr<MenuText> menu2_;
     //专用于显示一个文本框
-    TextBox* text_box_ = nullptr;
+    std::shared_ptr<TextBox> text_box_;
     int event_id_ = -1;
 
     RandomDouble rand_;
@@ -45,7 +45,7 @@ private:
 public:
     bool loadEventData();    //加载事件数据
     //这里再设计
-    bool callEvent(int event_id, Element* subscene = nullptr, int supmap_id = -1, int item_id = -1, int event_index = -1, int x = -1, int y = -1);    //调用指令的内容写这里
+    bool callEvent(int event_id, RunNode* subscene = nullptr, int supmap_id = -1, int item_id = -1, int event_index = -1, int x = -1, int y = -1);    //调用指令的内容写这里
 
 private:
     SubScene* subscene_;
@@ -55,7 +55,7 @@ private:
     int item_id_;
     Item* item_;
     //Save* save_;
-    bool loop_;
+    bool exit_ = false;
     int use_script_ = 0;
 
 private:
@@ -64,8 +64,9 @@ private:
 public:
     int getLeaveEvent(Role* role);
     void callLeaveEvent(Role* role);
-    void forceExit() { loop_ = false; }
-    void setUseScript(int u) { use_script_ = u; }
+    void forceExit();
+    void setUseScript(int u);
+    bool isExiting() { return exit_; }
 
 public:
     //以下大部分参数为int，请注意游戏数据中使用的是int16_t，有降低效率的可能
@@ -131,7 +132,7 @@ public:
     void allLeave();
     bool checkSubMapPic(int submap_id, int event_index, int pic);
     bool check14BooksPlaced();
-    void backHome() {}
+    void backHome(int event_index1, int begin_pic1, int end_pic1, int event_index2, int begin_pic2, int end_pic2);
     void setSexual(int role_id, int value);
     void shop();
     void playMusic(int music_id);
@@ -160,4 +161,52 @@ public:
 
     //扩展的50指令，传入下一个指令的指针，某一条需要
     void instruct_50e(int code, int e1, int e2, int e3, int e4, int e5, int e6, int* code_ptr = nullptr);
+
+public:
+    void print_e(const std::vector<int>& e, int i, int size)
+    {
+        for (int i1 = i; i1 < i + size - 1; i1++)
+        {
+            printf("%d, ", e[i1]);
+        }
+        if (size > 1)
+        {
+            printf("%d", e[i - 1]);
+        }
+        printf("\n");
+    }
+
+    template <typename F, typename C, std::size_t... I>
+    typename std::enable_if<check_return_type<F, C, void>::value, void>::type
+    runner_impl(F f, C* c, const std::vector<int>& e, int& i, std::index_sequence<I...>)
+    {
+        auto cur_i = i;
+        i += sizeof...(I) + 1;
+        print_e(e, cur_i + 1, sizeof...(I));
+        (c->*f)(e[I + cur_i + 1]...);
+    }
+
+    template <typename F, typename C, std::size_t... I>
+    typename std::enable_if<check_return_type<F, C, bool>::value, void>::type
+    runner_impl(F f, C* c, const std::vector<int>& e, int& i, std::index_sequence<I...>)
+    {
+        auto cur_i = i;
+        i += sizeof...(I) + 1;
+        print_e(e, cur_i + 1, sizeof...(I) + 2);
+        if ((c->*f)(e[I + cur_i + 1]...))
+        {
+            i += e[i];
+        }
+        else
+        {
+            i += e[i + 1];
+        }
+        i += 2;
+    }
+
+    template <typename F, typename C>
+    void runner(F f, C* c, const std::vector<int>& e, int& i)
+    {
+        runner_impl(f, c, e, i, std::make_index_sequence<arg_counter<F, C>::value>{});
+    }
 };

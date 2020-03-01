@@ -2,24 +2,24 @@
 #include "Engine.h"
 #include <cstdint>
 #include <string>
-#include "INIReader.h"
 
-typedef int16_t MAP_INT;
+using MAP_INT = int16_t;
+
+#ifdef _MSC_VER
+#define printf printf_s
+//#define fopen fopen_s
+#endif
 
 template <typename T>
 struct MapSquare
 {
     MapSquare() {}
-    MapSquare(int size)
-        : MapSquare()
-    {
-        resize(size);
-    }
+    MapSquare(int size) : MapSquare() { resize(size); }
     ~MapSquare()
     {
         if (data_)
         {
-            delete data_;
+            delete[] data_;
         }
     }
     //不会保留原始数据
@@ -27,7 +27,7 @@ struct MapSquare
     {
         if (data_)
         {
-            delete data_;
+            delete[] data_;
         }
         data_ = new T[x * x];
         line_ = x;
@@ -64,7 +64,7 @@ private:
     int line_ = 0;
 };
 
-typedef MapSquare<MAP_INT> MapSquareInt;
+using MapSquareInt = MapSquare<MAP_INT>;
 
 //前置声明
 struct Role;
@@ -115,7 +115,7 @@ public:
     int Equip0, Equip1;
     int Frame[15];    //动作帧数，改为不在此处保存，故实际无用，另外延迟帧数对效果几乎无影响，废弃
     int MPType, MP, MaxMP;
-    int Attack, Speed, Defence, Medcine, UsePoison, Detoxification, AntiPoison, Fist, Sword, Knife, Unusual, HiddenWeapon;
+    int Attack, Speed, Defence, Medicine, UsePoison, Detoxification, AntiPoison, Fist, Sword, Knife, Unusual, HiddenWeapon;
     int Knowledge, Morality, AttackWithPoison, AttackTwice, Fame, IQ;
     int PracticeItem;
     int ExpForItem;
@@ -136,10 +136,36 @@ public:
     int Moved, Acted;
     int ActTeam;    //选择行动阵营 0-我方，1-非我方，画效果层时有效
 
-    std::string ShowString;
-    BP_Color ShowColor;
-
     int SelectedMagic;
+
+    int Progress;
+
+    struct ShowString
+    {
+        std::string Text;
+        BP_Color Color;
+        int Size;
+    };
+    //显示文字效果使用
+    struct ActionShowInfo
+    {
+        std::vector<ShowString> ShowStrings;
+        int BattleHurt;
+        int ProgressChange;
+        int Effect;
+        ActionShowInfo()
+        {
+            clear();
+        }
+        void clear()
+        {
+            ShowStrings.clear();
+            BattleHurt = 0;
+            ProgressChange = 0;
+            Effect = -1;
+        }
+    };
+    ActionShowInfo Show;
 
 private:
     int X_, Y_;
@@ -147,7 +173,7 @@ private:
 
 public:
     MapSquare<Role*>* position_layer_ = nullptr;
-    void setRolePoitionLayer(MapSquare<Role*>* l) { position_layer_ = l; }
+    void setRolePositionLayer(MapSquare<Role*>* l) { position_layer_ = l; }
     void setPosition(int x, int y);
     void setPositionOnly(int x, int y)
     {
@@ -179,6 +205,9 @@ public:
 
     bool isAuto() { return Auto != 0 || Team != 0; }
 
+    void addShowString(std::string text, BP_Color color = { 255, 255, 255, 255 }, int size = 28) { Show.ShowStrings.push_back({ text, color, size }); }
+    void clearShowStrings() { Show.ShowStrings.clear(); }
+
 public:
     int AI_Action = 0;
     int AI_MoveX, AI_MoveY;
@@ -187,8 +216,22 @@ public:
     Item* AI_Item = nullptr;
 
 public:
+    int Network_Action;
+    int Network_MoveX;
+    int Network_MoveY;
+    int Network_ActionX;
+    int Network_ActionY;
+    Magic* Network_Magic = nullptr;
+    Item* Network_Item = nullptr;
+
+public:
+    int RealID = -1;
+    bool Networked = false;
+    bool Competing = false;
+
+public:
     static Role* getMaxValue() { return &max_role_value_; }
-    static void setMaxValue(INIReaderNormal* ini);
+
 private:
     static Role max_role_value_;
 };
@@ -204,9 +247,9 @@ struct ItemSave
     int ItemType;    //0剧情，1装备，2秘笈，3药品，4暗器
     int UnKnown5, UnKnown6, UnKnown7;
     int AddHP, AddMaxHP, AddPoison, AddPhysicalPower, ChangeMPType, AddMP, AddMaxMP;
-    int AddAttack, AddSpeed, AddDefence, AddMedcine, AddUsePoison, AddDetoxification, AddAntiPoison;
+    int AddAttack, AddSpeed, AddDefence, AddMedicine, AddUsePoison, AddDetoxification, AddAntiPoison;
     int AddFist, AddSword, AddKnife, AddUnusual, AddHiddenWeapon, AddKnowledge, AddMorality, AddAttackTwice, AddAttackWithPoison;
-    int OnlySuitableRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoison, NeedMedcine, NeedDetoxification;
+    int OnlySuitableRole, NeedMPType, NeedMP, NeedAttack, NeedSpeed, NeedUsePoison, NeedMedicine, NeedDetoxification;
     int NeedFist, NeedSword, NeedKnife, NeedUnusual, NeedHiddenWeapon, NeedIQ;
     int NeedExp, NeedExpForMakeItem, NeedMaterial;
     int MakeItem[5], MakeItemCount[5];
@@ -216,12 +259,11 @@ struct ItemSave
 struct Item : ItemSave
 {
 public:
-    static int MoneyItemID ;
+    static int MoneyItemID;
     static int CompassItemID;
 
 public:
     bool isCompass();
-    static void setSpecialItems(INIReaderNormal* ini);
 };
 
 //存档中的武学数据（无适合对应翻译，而且武侠小说中的武学近于魔法，暂且如此）

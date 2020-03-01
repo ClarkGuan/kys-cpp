@@ -1,7 +1,7 @@
 #include "Head.h"
 #include "Font.h"
-#include "libconvert.h"
 #include "GameUtil.h"
+#include "convert.h"
 
 Head::Head(Role* r)
 {
@@ -31,7 +31,7 @@ void Head::draw()
 
     if (state_ == Normal)
     {
-        color = { 128, 128, 128, 255 };
+        color = { 160, 160, 160, 255 };
     }
     //中毒时突出绿色
     color.r -= 2 * role_->Poison;
@@ -90,5 +90,3 @@ void Head::draw()
     font->draw(convert::formatString("%d", role_->PhysicalPower), 16, x_ + 154 - 4 * GameUtil::digit(role_->PhysicalPower), y_ + 61, { 250, 200, 50, 255 });
 
 }
-
-

@@ -1,25 +1,25 @@
 #include "TeamMenu.h"
-#include "Save.h"
 #include "Button.h"
 #include "GameUtil.h"
+#include "Save.h"
 
 TeamMenu::TeamMenu()
 {
     for (int i = 0; i < TEAMMATE_COUNT; i++)
     {
-        auto h = new Head();
+        auto h = std::make_shared<Head>();
+        addChild(h, i % 2 * 250, i / 2 * 100);
         h->setHaveBox(false);
         //h->setOnlyHead(true);
         heads_.push_back(h);
-        addChild(h, i % 2 * 250, i / 2 * 100);
         //selected_.push_back(0);
     }
-    button_all_ = new Button();
+    button_all_ = std::make_shared<Button>();
     button_all_->setText("全選");
-    button_ok_ = new Button();
+    button_ok_ = std::make_shared<Button>();
     button_ok_->setText("確定");
-    addChild(button_all_, 50, 300);
-    addChild(button_ok_, 150, 300);
+    addChild(button_all_, 0, 300);
+    addChild(button_ok_, 100, 300);
     setPosition(200, 150);
     setTextPosition(20, -30);
 }
@@ -41,7 +41,6 @@ void TeamMenu::onEntrance()
                 if (!GameUtil::canUseItem(r, item_))
                 {
                     heads_[i]->setText("不適合");
-
                 }
                 if (r->PracticeItem == item_->ID || r->Equip0 == item_->ID || r->Equip1 == item_->ID)
                 {
@@ -54,6 +53,10 @@ void TeamMenu::onEntrance()
     {
         button_all_->setVisible(false);
         button_ok_->setVisible(false);
+    }
+    for (auto h : heads_)
+    {
+        h->setVisible(h->getRole());
     }
 }
 
@@ -158,6 +161,7 @@ void TeamMenu::onPressedCancel()
 
 void TeamMenu::dealEvent(BP_Event& e)
 {
+    Menu::dealEvent(e);
     if (mode_ == 0)
     {
         if (item_)
@@ -184,5 +188,6 @@ void TeamMenu::dealEvent(BP_Event& e)
                 h->setText("");
             }
         }
+        getChild(active_child_)->setState(Press);
     }
 }

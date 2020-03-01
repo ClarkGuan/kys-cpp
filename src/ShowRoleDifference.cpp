@@ -1,13 +1,13 @@
 #include "ShowRoleDifference.h"
 #include "Font.h"
-#include "libconvert.h"
 #include "Save.h"
+#include "convert.h"
 
 ShowRoleDifference::ShowRoleDifference()
 {
-    head1_ = new Head();
+    head1_ = std::make_shared<Head>();
+    head2_ = std::make_shared<Head>();
     addChild(head1_);
-    head2_ = new Head();
     addChild(head2_, 400, 0);
     //setText("修習成功");
     setPosition(250, 180);
@@ -24,7 +24,7 @@ void ShowRoleDifference::draw()
 
     //if (black_screen_)
     //{
-    //    Engine::getInstance()->fillColor({ 0, 0, 0, 128 }, 0, 0, -1, -1);
+    Engine::getInstance()->fillColor({ 0, 0, 0, 128 }, 0, 0, -1, -1);
     //}
     head1_->setRole(role1_);
     head2_->setRole(role2_);
@@ -55,12 +55,12 @@ void ShowRoleDifference::draw()
 
     if (role1_->HP != role2_->HP || role1_->MaxHP != role2_->MaxHP)
     {
-        str = convert::formatString("生命 %3d/%3d   -> %3d/%3d", role1_->HP, role1_->MaxHP, role2_->HP, role2_->MaxHP);
+        str = convert::formatString("生命 %%3d/%3d   -> %%3d/%3d", role1_->MaxHP, role2_->MaxHP);
         showOneDifference(role1_->HP, str, 20, color, x, y, 1);
     }
     if (role1_->MP != role2_->MP || role1_->MaxMP != role2_->MaxMP)
     {
-        str = convert::formatString("內力 %3d/%3d   -> %3d/%3d", role1_->MP, role1_->MaxMP, role2_->MP, role2_->MaxMP);
+        str = convert::formatString("內力 %%3d/%3d   -> %%3d/%3d", role1_->MaxMP, role2_->MaxMP);
         showOneDifference(role1_->MP, str, 20, color, x, y, 1);
     }
 
@@ -68,7 +68,7 @@ void ShowRoleDifference::draw()
     showOneDifference(role1_->Defence, "防禦 %7d   -> %7d", 20, color, x, y);
     showOneDifference(role1_->Speed, "輕功 %7d   -> %7d", 20, color, x, y);
 
-    showOneDifference(role1_->Medcine, "醫療 %7d   -> %7d", 20, color, x, y);
+    showOneDifference(role1_->Medicine, "醫療 %7d   -> %7d", 20, color, x, y);
     showOneDifference(role1_->UsePoison, "用毒 %7d   -> %7d", 20, color, x, y);
     showOneDifference(role1_->Detoxification, "解毒 %7d   -> %7d", 20, color, x, y);
     showOneDifference(role1_->AntiPoison, "抗毒 %7d   -> %7d", 20, color, x, y);
@@ -110,4 +110,3 @@ void ShowRoleDifference::draw()
     //showOneDifference(role1_->Level, "御劍 %7d   -> %7d", 20, color, x, y);
     TextBox::draw();
 }
-

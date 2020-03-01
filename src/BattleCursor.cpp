@@ -2,14 +2,15 @@
 #include "BattleScene.h"
 #include "Save.h"
 
-BattleCursor::BattleCursor()
+BattleCursor::BattleCursor(BattleScene* b)
 {
-    head_selected_ = new Head();
+    head_selected_ = std::make_shared<Head>();
     addChild(head_selected_);
-    ui_status_ = new UIStatus();
+    ui_status_ = std::make_shared<UIStatus>();
     ui_status_->setVisible(false);
     ui_status_->setShowButton(false);
     addChild(ui_status_, 300, 0);
+    battle_scene_ = b;
 }
 
 BattleCursor::~BattleCursor()
@@ -26,7 +27,10 @@ void BattleCursor::setRoleAndMagic(Role* r, Magic* m /*= nullptr*/, int l /*= 0*
 
 void BattleCursor::dealEvent(BP_Event& e)
 {
-    if (battle_scene_ == nullptr) { return; }
+    if (battle_scene_ == nullptr)
+    {
+        return;
+    }
     if (!role_->isAuto())
     {
         int x = -1, y = -1;
@@ -40,7 +44,7 @@ void BattleCursor::dealEvent(BP_Event& e)
             }
             else
             {
-                Scene::getTowardsPosition(battle_scene_->select_x_, battle_scene_->select_y_, tw, &x, &y);
+                Scene::getTowardsPosition(battle_scene_->selectX(), battle_scene_->selectY(), tw, &x, &y);
             }
         }
         if (e.type == BP_MOUSEMOTION)
@@ -69,12 +73,12 @@ void BattleCursor::setCursor(int x, int y)
         battle_scene_->setSelectPosition(x, y);
         if (head_selected_->getVisible())
         {
-            head_selected_->setRole(battle_scene_->role_layer_->data(x, y));
+            head_selected_->setRole(battle_scene_->getRoleLayer()->data(x, y));
         }
         //uiµÄÉè¶¨
         if (ui_status_->getVisible())
         {
-            ui_status_->setRole(battle_scene_->role_layer_->data(x, y));
+            ui_status_->setRole(battle_scene_->getRoleLayer()->data(x, y));
         }
     }
     if (mode_ == Move)
@@ -82,7 +86,7 @@ void BattleCursor::setCursor(int x, int y)
     }
     else if (mode_ == Action)
     {
-        battle_scene_->calEffectLayer(role_, battle_scene_->select_x_, battle_scene_->select_y_, magic_, level_index_);
+        battle_scene_->calEffectLayer(role_, battle_scene_->selectX(), battle_scene_->selectY(), magic_, level_index_);
     }
 }
 
@@ -100,23 +104,39 @@ void BattleCursor::onEntrance()
     head_selected_->setPosition(w - 400, h - 150);
     battle_scene_->towards_ = role_->FaceTowards;
 
-    if (role_->isAuto())
+    if (role_->isAuto() || role_->Networked)
     {
         int x = -1, y = -1;
+
         if (mode_ == Move)
         {
-            x = role_->AI_MoveX;
-            y = role_->AI_MoveY;
-            setResult(0);
-            setExit(true);
+            if (role_->Networked)
+            {
+                x = role_->Network_MoveX;
+                y = role_->Network_MoveY;
+            }
+            else
+            {
+                x = role_->AI_MoveX;
+                y = role_->AI_MoveY;
+            }
         }
         else if (mode_ == Action)
         {
-            x = role_->AI_ActionX;
-            y = role_->AI_ActionY;
-            setResult(0);
-            setExit(true);
+            if (role_->Networked)
+            {
+                x = role_->Network_ActionX;
+                y = role_->Network_ActionY;
+            }
+            else
+            {
+                x = role_->AI_ActionX;
+                y = role_->AI_ActionY;
+            }
         }
+
+        setResult(0);
+        setExit(true);
         setVisible(!exit_);
         setCursor(x, y);
     }

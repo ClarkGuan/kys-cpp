@@ -1,13 +1,9 @@
+#include "Save.h"
 #include "File.h"
 #include "GrpIdxFile.h"
+#include "NewSave.h"
 #include "PotConv.h"
-#include "Save.h"
-#include "libconvert.h"
-#include <fstream>
-#include <iostream>
-#include <string>
-
-Save Save::save_;
+#include "convert.h"
 
 Save::Save()
 {
@@ -53,47 +49,25 @@ bool Save::checkSaveFileExist(int num)
         && File::fileExist(getFilename(num, 'd'));
 }
 
+void Save::updateAllPtrVector()
+{
+    toPtrVector(roles_mem_, roles_);
+    toPtrVector(items_mem_, items_);
+    toPtrVector(submap_infos_mem_, submap_infos_);
+    toPtrVector(magics_mem_, magics_);
+    toPtrVector(shops_mem_, shops_);
+}
+
 bool Save::load(int num)
 {
     if (!checkSaveFileExist(num))
     {
         return false;
     }
-    std::string filenamer = getFilename(num, 'r');
-    std::string filenames = getFilename(num, 's');
-    std::string filenamed = getFilename(num, 'd');
-    std::string filename_idx = "../game/save/ranger.idx32";
 
-    auto rgrp = GrpIdxFile::getIdxContent(filename_idx, filenamer, &offset_, &length_);
-
-    memcpy(&InShip, rgrp + offset_[0], length_[0]);
-    File::readDataToVector(rgrp + offset_[1], length_[1], roles_mem_, sizeof(RoleSave));
-    File::readDataToVector(rgrp + offset_[2], length_[2], items_mem_, sizeof(ItemSave));
-    File::readDataToVector(rgrp + offset_[3], length_[3], submap_infos_mem_, sizeof(SubMapInfoSave));
-    File::readDataToVector(rgrp + offset_[4], length_[4], magics_mem_, sizeof(MagicSave));
-    File::readDataToVector(rgrp + offset_[5], length_[5], shops_mem_, sizeof(ShopSave));
-
-    toPtrVector(roles_mem_, roles_);
-    toPtrVector(items_mem_, items_);
-    toPtrVector(submap_infos_mem_, submap_infos_);
-    toPtrVector(magics_mem_, magics_);
-    toPtrVector(shops_mem_, shops_);
-
-    delete[] rgrp;
-
-    auto submap_count = submap_infos_.size();
-
-    auto sdata = new char[submap_count * sdata_length_];
-    auto ddata = new char[submap_count * ddata_length_];
-    File::readFile(filenames, sdata, submap_count * sdata_length_);
-    File::readFile(filenamed, ddata, submap_count * ddata_length_);
-    for (int i = 0; i < submap_count; i++)
-    {
-        memcpy(&(submap_infos_mem_[i].LayerData(0, 0, 0)), sdata + sdata_length_ * i, sdata_length_);
-        memcpy(submap_infos_mem_[i].Event(0), ddata + ddata_length_ * i, ddata_length_);
-    }
-    delete[] sdata;
-    delete[] ddata;
+    loadR(num);
+    loadRFromDB(num);
+    loadSD(num);
 
     //内部编码为cp936
     if (Encode != 936)
@@ -124,11 +98,52 @@ bool Save::load(int num)
     return true;
 }
 
-bool Save::save(int num)
+void Save::loadR(int num)
 {
     std::string filenamer = getFilename(num, 'r');
+    std::string filename_idx = "../game/save/ranger.idx32";
+    auto rgrp = GrpIdxFile::getIdxContent(filename_idx, filenamer, &offset_, &length_);
+    memcpy((void*)this, rgrp.data() + offset_[0], length_[0]);
+    File::readDataToVector(rgrp.data() + offset_[1], length_[1], roles_mem_, sizeof(RoleSave));
+    File::readDataToVector(rgrp.data() + offset_[2], length_[2], items_mem_, sizeof(ItemSave));
+    File::readDataToVector(rgrp.data() + offset_[3], length_[3], submap_infos_mem_, sizeof(SubMapInfoSave));
+    File::readDataToVector(rgrp.data() + offset_[4], length_[4], magics_mem_, sizeof(MagicSave));
+    File::readDataToVector(rgrp.data() + offset_[5], length_[5], shops_mem_, sizeof(ShopSave));
+
+    updateAllPtrVector();
+}
+
+void Save::loadSD(int num)
+{
     std::string filenames = getFilename(num, 's');
     std::string filenamed = getFilename(num, 'd');
+
+    auto submap_count = submap_infos_.size();
+
+    auto sdata = new char[submap_count * sdata_length_];
+    auto ddata = new char[submap_count * ddata_length_];
+    File::readFile(filenames, sdata, submap_count * sdata_length_);
+    File::readFile(filenamed, ddata, submap_count * ddata_length_);
+    for (int i = 0; i < submap_count; i++)
+    {
+        memcpy(&(submap_infos_mem_[i].LayerData(0, 0, 0)), sdata + sdata_length_ * i, sdata_length_);
+        memcpy(submap_infos_mem_[i].Event(0), ddata + ddata_length_ * i, ddata_length_);
+    }
+    delete[] sdata;
+    delete[] ddata;
+}
+
+bool Save::save(int num)
+{
+    saveR(num);
+    saveSD(num);
+    saveRToDB(num);
+    return true;
+}
+
+void Save::saveR(int num)
+{
+    std::string filenamer = getFilename(num, 'r');
 
     char* rgrp = new char[offset_.back()];
     memcpy(rgrp + offset_[0], &InShip, length_[0]);
@@ -140,7 +155,12 @@ bool Save::save(int num)
 
     File::writeFile(filenamer, rgrp, offset_.back());
     delete[] rgrp;
+}
 
+void Save::saveSD(int num)
+{
+    std::string filenames = getFilename(num, 's');
+    std::string filenamed = getFilename(num, 'd');
     auto submap_count = submap_infos_mem_.size();
 
     auto sdata = new char[submap_count * sdata_length_];
@@ -154,8 +174,20 @@ bool Save::save(int num)
     File::writeFile(filenamed, ddata, submap_count * ddata_length_);
     delete[] sdata;
     delete[] ddata;
+}
 
-    return true;
+void Save::resetRData(const std::vector<RoleSave>& newData)
+{
+    roles_mem_.clear();
+    for (int i = 0; i < newData.size(); i++)
+    {
+        roles_mem_.emplace_back();
+        auto& r = roles_mem_.back();
+        memcpy(&r, &newData[i], sizeof(RoleSave));
+        r.RealID = r.ID;
+        r.ID = i;
+    }
+    updateAllPtrVector();
 }
 
 Role* Save::getTeamMate(int i)
@@ -263,4 +295,110 @@ int Save::getRoleLearnedMagicLevelIndex(Role* r, Magic* m)
         }
     }
     return -1;
+}
+
+void Save::saveRToCSV(int num)
+{
+    NewSave::SaveCSVBaseInfo((BaseInfo*)this, 1, num);
+    // 背包
+    NewSave::SaveCSVItemList(Items, ITEM_IN_BAG_COUNT, num);
+    // 人物
+    NewSave::SaveCSVRoleSave(roles_mem_, num);
+    // 物品
+    NewSave::SaveCSVItemSave(items_mem_, num);
+    // 场景
+    NewSave::SaveCSVSubMapInfoSave(submap_infos_mem_, num);
+    // 武功
+    NewSave::SaveCSVMagicSave(magics_mem_, num);
+    // 商店
+    NewSave::SaveCSVShopSave(shops_mem_, num);
+}
+
+void Save::loadRFromCSV(int num)
+{
+    NewSave::LoadCSVBaseInfo((BaseInfo*)this, 1, num);
+    NewSave::LoadCSVItemList(Items, ITEM_IN_BAG_COUNT, num);
+    NewSave::LoadCSVRoleSave(roles_mem_, num);
+    NewSave::LoadCSVItemSave(items_mem_, num);
+    NewSave::LoadCSVSubMapInfoSave(submap_infos_mem_, num);
+    NewSave::LoadCSVMagicSave(magics_mem_, num);
+    NewSave::LoadCSVShopSave(shops_mem_, num);
+    updateAllPtrVector();
+    makeMaps();
+}
+
+bool Save::insertAt(const std::string& type, int idx)
+{
+    if (type == u8"Role")
+    {
+        NewSave::InsertRoleAt(roles_mem_, idx);
+        return true;
+    }
+    else if (type == u8"Item")
+    {
+        NewSave::InsertItemAt(items_mem_, idx);
+        return true;
+    }
+    else if (type == u8"Magic")
+    {
+        NewSave::InsertMagicAt(magics_mem_, idx);
+        return true;
+    }
+    else if (type == u8"SubMapInfo")
+    {
+        NewSave::InsertSubMapInfoAt(submap_infos_mem_, idx);
+        return true;
+    }
+    else if (type == u8"Shop")
+    {
+        NewSave::InsertShopAt(shops_mem_, idx);
+        return true;
+    }
+    return false;
+}
+
+void Save::saveRToDB(int num)
+{
+    std::string filename0 = "../game/save/0.db";
+    if (!File::fileExist(filename0))
+    {
+        return;
+    }
+    sqlite3* db;
+    //此处最好复制一个，先搞搞再说
+    std::string filename = "../game/save/" + std::to_string(num) + ".db";
+    convert::writeStringToFile(convert::readStringFromFile(filename0), filename);
+    sqlite3_open(filename.c_str(), &db);
+    sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
+    NewSave::SaveDBBaseInfo(db, (BaseInfo*)this, 1);
+    NewSave::SaveDBItemList(db, Items, ITEM_IN_BAG_COUNT);
+    NewSave::SaveDBRoleSave(db, roles_mem_);
+    NewSave::SaveDBItemSave(db, items_mem_);
+    NewSave::SaveDBSubMapInfoSave(db, submap_infos_mem_);
+    NewSave::SaveDBMagicSave(db, magics_mem_);
+    NewSave::SaveDBShopSave(db, shops_mem_);
+    sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
+    sqlite3_close(db);
+}
+
+void Save::loadRFromDB(int num)
+{
+    NewSave::initDBFieldInfo();
+    auto filename = "../game/save/" + std::to_string(num) + ".db";
+    if (!File::fileExist(filename))
+    {
+        return;
+    }
+    sqlite3* db;
+    sqlite3_open(filename.c_str(), &db);
+    NewSave::LoadDBBaseInfo(db, (BaseInfo*)this, 1);
+    NewSave::LoadDBItemList(db, Items, ITEM_IN_BAG_COUNT);
+    NewSave::LoadDBRoleSave(db, roles_mem_);
+    NewSave::LoadDBItemSave(db, items_mem_);
+    NewSave::LoadDBSubMapInfoSave(db, submap_infos_mem_);
+    NewSave::LoadDBMagicSave(db, magics_mem_);
+    NewSave::LoadDBShopSave(db, shops_mem_);
+    sqlite3_close(db);
+    updateAllPtrVector();
+    makeMaps();
 }
